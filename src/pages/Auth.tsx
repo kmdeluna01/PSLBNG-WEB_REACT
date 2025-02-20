@@ -1,19 +1,70 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { vendorAuth } from "@/services/api";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    // Add authentication logic here
-    setTimeout(() => setIsLoading(false), 2000);
+
+    const formData = new FormData(e.currentTarget);
+    const isRegister = (e.currentTarget.getAttribute('data-form-type') === 'register');
+
+    try {
+      if (isRegister) {
+        const registerData = {
+          name: formData.get('shopName') as string,
+          email: formData.get('registerEmail') as string,
+          number: formData.get('phoneNumber') as string,
+          location: {
+            latitude: parseFloat(formData.get('latitude') as string),
+            longitude: parseFloat(formData.get('longitude') as string),
+          },
+          password: formData.get('registerPassword') as string,
+        };
+
+        await vendorAuth.register(registerData);
+        toast({
+          title: "Success",
+          description: "Account created successfully! Please login.",
+        });
+      } else {
+        const response = await vendorAuth.login(
+          formData.get('email') as string,
+          formData.get('password') as string
+        );
+
+        // Store the token and vendor info
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('vendorId', response.data.vendor._id);
+        localStorage.setItem('vendorName', response.data.vendor.name);
+
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,14 +81,14 @@ export default function Auth() {
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} data-form-type="login" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required />
+                    <Input id="email" name="email" type="email" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" required />
+                    <Input id="password" name="password" type="password" required />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Loading..." : "Login"}
@@ -45,28 +96,28 @@ export default function Auth() {
                 </form>
               </TabsContent>
               <TabsContent value="register">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} data-form-type="register" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="shopName">Shop Name</Label>
-                    <Input id="shopName" required />
+                    <Input id="shopName" name="shopName" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ownerName">Owner Name</Label>
-                    <Input id="ownerName" required />
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input id="phoneNumber" name="phoneNumber" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="registerEmail">Email</Label>
-                    <Input id="registerEmail" type="email" required />
+                    <Input id="registerEmail" name="registerEmail" type="email" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="registerPassword">Password</Label>
-                    <Input id="registerPassword" type="password" required />
+                    <Input id="registerPassword" name="registerPassword" type="password" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input id="latitude" placeholder="Latitude" required />
-                      <Input id="longitude" placeholder="Longitude" required />
+                      <Input id="latitude" name="latitude" placeholder="Latitude" required />
+                      <Input id="longitude" name="longitude" placeholder="Longitude" required />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
