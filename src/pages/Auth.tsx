@@ -8,9 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { vendorAuth } from "@/services/api";
+import LocationPicker from "@/components/LocationPicker";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -28,8 +30,8 @@ export default function Auth() {
           email: formData.get('registerEmail') as string,
           number: formData.get('phoneNumber') as string,
           location: {
-            latitude: parseFloat(formData.get('latitude') as string),
-            longitude: parseFloat(formData.get('longitude') as string),
+            latitude: location.latitude,
+            longitude: location.longitude,
           },
           password: formData.get('registerPassword') as string,
         };
@@ -65,6 +67,10 @@ export default function Auth() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation({ latitude: lat, longitude: lng });
   };
 
   return (
@@ -114,10 +120,15 @@ export default function Auth() {
                     <Input id="registerPassword" name="registerPassword" type="password" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input id="latitude" name="latitude" placeholder="Latitude" required />
-                      <Input id="longitude" name="longitude" placeholder="Longitude" required />
+                    <Label>Location</Label>
+                    <LocationPicker onLocationSelect={handleLocationSelect} />
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div className="text-sm">
+                        Latitude: {location.latitude.toFixed(6)}
+                      </div>
+                      <div className="text-sm">
+                        Longitude: {location.longitude.toFixed(6)}
+                      </div>
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
