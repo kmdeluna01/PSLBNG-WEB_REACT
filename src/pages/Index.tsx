@@ -1,71 +1,85 @@
 
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { products } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, ShoppingCart, Circle, CheckCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
-const statsCards = [
-  {
-    title: "Total Products",
-    value: "24",
-    icon: Package,
-    description: "Active products in your store",
-  },
-  {
-    title: "Pending Orders",
-    value: "12",
-    icon: Circle,
-    description: "Orders waiting to be processed",
-  },
-  {
-    title: "Processing Orders",
-    value: "5",
-    icon: ShoppingCart,
-    description: "Orders currently being prepared",
-  },
-  {
-    title: "Completed Orders",
-    value: "156",
-    icon: CheckCircle,
-    description: "Successfully fulfilled orders",
-  },
-];
+export default function Index() {
+  const { toast } = useToast();
+  const vendorId = localStorage.getItem("vendorId");
 
-const Index = () => {
-  return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((card) => (
-          <Card key={card.title} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-              <card.icon className="h-4 w-4 text-vendor-600" />
+  const { data: productData, isLoading, error } = useQuery({
+    queryKey: ["products", vendorId],
+    queryFn: () => products.getVendorProducts(vendorId!),
+    enabled: !!vendorId,
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch products",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        {[...Array(6)].map((_, index) => (
+          <Card key={index} className="overflow-hidden">
+            <Skeleton className="h-48 w-full" />
+            <CardHeader>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2 mt-2" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-xs text-vendor-600 mt-1">{card.description}</p>
-            </CardContent>
           </Card>
         ))}
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+    );
+  }
+
+  if (!productData?.data || productData.data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-vendor-600">No Products</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-vendor-600">Orders will appear here</p>
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Top Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-vendor-600">Products will appear here</p>
+          <CardContent className="text-center text-vendor-500">
+            You haven't added any products yet.
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+      {productData.data.map((product: any) => (
+        <Card key={product._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          {product.image && (
+            <div className="relative h-48 w-full">
+              <img
+                src={`https://pslbng-mobile-1.onrender.com/${product.image}`}
+                alt={product.productName}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          )}
+          <CardHeader>
+            <CardTitle className="text-xl text-vendor-800">{product.productName}</CardTitle>
+            <p className="text-vendor-600 font-medium">₱{product.price.toLocaleString()}</p>
+            <p className="text-sm text-vendor-500">Stock: {product.quantity}</p>
+          </CardHeader>
+          <CardContent>
+            <p className="text-vendor-600 text-sm line-clamp-2">{product.description}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
-};
-
-export default Index;
+}
