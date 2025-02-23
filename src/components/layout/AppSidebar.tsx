@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -18,23 +17,30 @@ import {
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "../../assets/logo.png";
 
 const menuItems = [
-  { title: "Dashboard", icon: Home, path: "/" },
-  { title: "Products", icon: Package, path: "/products" },
-  { title: "Orders", icon: ShoppingCart, path: "/orders" },
-  { title: "Profile", icon: User, path: "/profile" },
+  { title: "Products", icon: Package, path: "/merchant" },
+  { title: "Orders", icon: ShoppingCart, path: "/merchant/orders" },
+  { title: "Profile", icon: User, path: "/merchant/details" },
   { title: "Settings", icon: Settings, path: "/settings" },
 ];
 
 export function AppSidebar() {
   const navigate = useNavigate();
 
+  const logOut = () => {
+    localStorage.removeItem('isMerchantAuth');
+    localStorage.removeItem('uploadedProducts');
+    localStorage.removeItem('token');
+    navigate("/auth");
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-vendor-800">VendorSpace</h2>
+          <img src={logo} alt="PSLBNG Logo" className="h-auto" />
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -54,7 +60,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <div className="mt-auto p-4">
-          <button className="w-full flex items-center text-vendor-600 hover:text-vendor-800 transition-colors p-2">
+          <button
+            className="w-full flex items-center text-vendor-600 hover:text-vendor-800 transition-colors p-2"
+            onClick={logOut}
+          >
             <LogOut className="mr-3 h-4 w-4" />
             <span>Logout</span>
           </button>

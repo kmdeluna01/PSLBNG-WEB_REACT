@@ -1,15 +1,33 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ProductsLayout } from "@/components/layout/ProductsLayout";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
+import EditProduct from "./pages/EditProduct";
 import NotFound from "./pages/NotFound";
+import { useEffect, useState } from "react";
+import MerchantDetails from "./pages/Profile";
+import PendingOrder from "./pages/Orders";
 
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/auth" />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -20,11 +38,43 @@ const App = () => (
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route
-            path="/"
+            path="/merchant"
             element={
-              <DashboardLayout>
-                <Index />
-              </DashboardLayout>
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <Index />
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products/:product_id/edit"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <EditProduct />
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/merchant/orders"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <PendingOrder/>
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/merchant/details"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <MerchantDetails/>
+                </ProductsLayout>
+              </ProtectedRoute>
             }
           />
           <Route path="*" element={<NotFound />} />
