@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import { useEffect, useState } from "react";
 import MerchantDetails from "./pages/Profile";
 import PendingOrder from "./pages/Orders";
+import SecuritySettings from "./pages/SecuritySettings";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     return <div>Loading...</div>;
   }
 
-  return isAuthenticated ? children : <Navigate to="/auth" />;
+  return isAuthenticated ? children : <Navigate to="/" />;
 };
 
 const App = () => (
@@ -36,7 +37,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Auth />} />
           <Route
             path="/merchant"
             element={
@@ -73,6 +74,16 @@ const App = () => (
               <ProtectedRoute>
                 <ProductsLayout>
                   <MerchantDetails/>
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/merchant/security-settings"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <SecuritySettings/>
                 </ProductsLayout>
               </ProtectedRoute>
             }

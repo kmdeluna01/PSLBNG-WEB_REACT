@@ -23,7 +23,7 @@ const menuItems = [
   { title: "Products", icon: Package, path: "/merchant" },
   { title: "Orders", icon: ShoppingCart, path: "/merchant/orders" },
   { title: "Profile", icon: User, path: "/merchant/details" },
-  { title: "Settings", icon: Settings, path: "/settings" },
+  { title: "Settings", icon: Settings, path: "/merchant/security-settings" },
 ];
 
 export function AppSidebar() {

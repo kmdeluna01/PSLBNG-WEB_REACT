@@ -123,6 +123,11 @@ const Auth = () => {
           }
         } catch (error) {
           console.error(error);
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "An error occurred",
+            variant: "destructive",
+          });
         } finally {
           setIsLoading(false);
         }

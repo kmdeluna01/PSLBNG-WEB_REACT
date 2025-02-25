@@ -1,0 +1,45 @@
+.safe-area-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.container {
+    margin: 12px;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    padding: 3px;
+}
+
+.top-bar-label {
+    font-size: 20px;
+    color: #2f5c45;
+    padding-left: 10px;
+}
+
+.back-button {
+    padding: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFFFFF;
+    padding: 16px 8px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.buttons-text {
+    color: #355E3B;
+    font-size: 18px;
+    font-weight: 600;
+}
