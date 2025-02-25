@@ -92,8 +92,11 @@ const Auth = () => {
           await axios.post(`${baseURL}/merchant-register`, registerData, {
             headers: { "Content-Type": "application/json" },
           });
-          alert("Merchant registered successfully");
           navigate("/");
+          toast({
+            title: "Success",
+            description: "Merchant registered successfully",
+          });
         } catch (error) {
           console.error("Registration Error:", error);
           alert("Something went wrong during registration.");
