@@ -22,7 +22,7 @@ export default function Index() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/auth");
+      navigate("/");
     }
   }, [navigate]);
 
