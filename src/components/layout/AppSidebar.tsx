@@ -33,7 +33,7 @@ export function AppSidebar() {
     localStorage.removeItem('isMerchantAuth');
     localStorage.removeItem('uploadedProducts');
     localStorage.removeItem('token');
-    navigate("/auth");
+    navigate("/");
   };
 
   return (
