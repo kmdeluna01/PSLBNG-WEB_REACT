@@ -1,9 +1,8 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -16,7 +15,7 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
-    //allowedHosts: ["pasalubong-palace.onrender.com"],
+    allowedHosts: ["pasalubong-merchant.onrender.com"],
   },
   plugins: [
     react(),
