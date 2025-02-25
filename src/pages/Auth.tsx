@@ -93,7 +93,7 @@ const Auth = () => {
             headers: { "Content-Type": "application/json" },
           });
           alert("Merchant registered successfully");
-          navigate("/auth");
+          navigate("/");
         } catch (error) {
           console.error("Registration Error:", error);
           alert("Something went wrong during registration.");
