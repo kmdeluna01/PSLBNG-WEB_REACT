@@ -37,7 +37,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="sticky top-0 h-screen">
       <SidebarContent>
         <div className="p-6">
           <img src={logo} alt="PSLBNG Logo" className="h-auto" />
@@ -72,3 +72,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+export default AppSidebar;
