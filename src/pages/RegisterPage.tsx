@@ -83,6 +83,7 @@ const RegisterPage = () => {
 
       await axios.post(`${baseURL}/merchant-register`, registerData);
       toast({ title: "Success", description: "Account created successfully!" });
+      navigate("/");
     } catch (error) {
       toast({ title: "Error", description: error.response?.data?.message || "An error occurred", variant: "destructive" });
     } finally {
