@@ -8,6 +8,8 @@ import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import EditProduct from "./pages/EditProduct";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import { useEffect, useState } from "react";
 import MerchantDetails from "./pages/Profile";
 import PendingOrder from "./pages/Orders";
@@ -37,7 +39,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Auth />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/merchant"
             element={
