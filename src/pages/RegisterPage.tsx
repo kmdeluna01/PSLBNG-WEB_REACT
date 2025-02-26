@@ -120,17 +120,24 @@ const RegisterPage = () => {
           </div>
           <div>
             <Label>Location</Label>
-            <div className="h-[300px] rounded-lg overflow-hidden border">
-              {location ? (
-                <MapContainer center={[location.latitude, location.longitude]} zoom={16} className="h-full w-full">
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location.latitude, location.longitude]} />
-                  <MapEvents />
-                </MapContainer>
-              ) : (
-                <p className="flex items-center justify-center h-full">Loading map...</p>
-              )}
-            </div>
+            {!showModal && (
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                {location ? (
+                  <MapContainer 
+                    key={`${location?.latitude}-${location?.longitude}`} 
+                    center={[location.latitude, location.longitude]} 
+                    zoom={16} 
+                    className="h-full w-full"
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={[location.latitude, location.longitude]} />
+                    <MapEvents />
+                  </MapContainer>
+                ) : (
+                  <p className="flex items-center justify-center h-full">Loading map...</p>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4 mt-2">
               <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => requestLocation()}>Use Current Location</Button>
               <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => setShowModal(true)}>Pin a Location</Button>
@@ -149,7 +156,9 @@ const RegisterPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
               <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
               <div className="h-[400px]">
-                <MapContainer center={[location?.latitude || 14.5995, location?.longitude || 120.9842]} zoom={14} className="h-full">
+                <MapContainer 
+                key={`${location?.latitude}-${location?.longitude}`} 
+                center={[location?.latitude || 14.5995, location?.longitude || 120.9842]} zoom={14} className="h-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <Marker position={[location?.latitude, location?.longitude]} />
                   <MapEvents />
