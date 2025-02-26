@@ -8,17 +8,29 @@ import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import logo from "../assets/logo.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import L from "leaflet";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const customIcon = new L.Icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41], 
+  iconAnchor: [12, 41], 
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const baseURL = import.meta.env.VITE_API_URL || "";
-
-// Fix marker icons
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-});
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -130,7 +142,9 @@ const RegisterPage = () => {
                     className="h-full w-full"
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[location.latitude, location.longitude]} />
+                    {location && (
+                      <Marker icon={customIcon} position={[location.latitude, location.longitude]} />
+                    )}
                     <MapEvents />
                   </MapContainer>
                 ) : (
@@ -158,9 +172,10 @@ const RegisterPage = () => {
               <div className="h-[400px]">
                 <MapContainer 
                 key={`${location?.latitude}-${location?.longitude}`} 
-                center={[location?.latitude || 14.5995, location?.longitude || 120.9842]} zoom={14} className="h-full">
+                center={[location.latitude, location.longitude]} 
+                zoom={16} className="h-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location?.latitude, location?.longitude]} />
+                  {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
                   <MapEvents />
                 </MapContainer>
               </div>
