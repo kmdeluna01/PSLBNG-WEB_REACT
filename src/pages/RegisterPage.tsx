@@ -33,21 +33,26 @@ L.Icon.Default.mergeOptions({
 const baseURL = import.meta.env.VITE_API_URL || "";
 
 const RegisterPage = () => {
+  const [activeButton, setActiveButton] = useState("");
+
+  const handleCurrentLocation = () => {
+      setActiveButton("current");
+      requestLocation();
+  };
+
+  const handlePinLocation = () => {
+      setActiveButton("pin");
+      setShowModal(true);
+  };
+
   const navigate = useNavigate();
   const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     requestLocation();
   }, []);
-
-  useEffect(() => {
-    if (isUsingCurrentLocation) {
-      requestLocation();
-    }
-  }, [isUsingCurrentLocation]);
 
   const requestLocation = () => {
     if (navigator.geolocation) {
@@ -153,9 +158,29 @@ const RegisterPage = () => {
               </div>
             )}
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => requestLocation()}>Use Current Location</Button>
-              <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => setShowModal(true)}>Pin a Location</Button>
-            </div>
+              <Button
+                  type="button"
+                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                      activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                  }`}
+                  onClick={handleCurrentLocation}
+                  disabled={activeButton === "current"}
+              >
+                  Use Current Location
+              </Button>
+
+              <Button
+                  type="button"
+                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                      activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                  }`}
+                  onClick={handlePinLocation}
+                  disabled={activeButton === "pin"}
+              >
+                  Pin a Location
+              </Button>
+          </div>
+          
           </div>
           <Button type="submit" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -180,8 +205,8 @@ const RegisterPage = () => {
                 </MapContainer>
               </div>
               <div className="mt-4 flex justify-end gap-2">
-                <Button onClick={() => setShowModal(false)}>Cancel</Button>
-                <Button onClick={() => setShowModal(false)}>Confirm Location</Button>
+                <Button className="bg-gray-700 hover:bg-gray-600 text-white" onClick={() => setShowModal(false)}>Cancel</Button>
+                <Button className="bg-green-700 hover:bg-green-600 text-white" onClick={() => setShowModal(false)}>Confirm Location</Button>
               </div>
             </div>
           </div>
