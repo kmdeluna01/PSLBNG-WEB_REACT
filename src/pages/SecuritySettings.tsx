@@ -13,6 +13,11 @@ const SecuritySettings = () => {
     const [newPassword, setNewPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    const clearInputs = () => {
+        setPassword('');
+        setNewPassword('');
+    };
+
     const verifyPassword = async () => {
         setIsLoading(true);
         const vendorId = localStorage.getItem('vendorId');
@@ -26,8 +31,10 @@ const SecuritySettings = () => {
                 toast({ title: "Success", description: "Password verified!" });
                 setShowVerifyModal(false);
                 setShowChangePasswordModal(true);
+                setPassword('');
             }
         } catch (error) {
+            setPassword('');
             if (error.response && error.response.status === 400) {
                 toast({ title: "Error", description: "Incorrect password. Please try again.", variant: "destructive" });
             } else {
@@ -51,8 +58,10 @@ const SecuritySettings = () => {
                 toast({ title: "Success", description: "Password changed successfully!" });
                 setShowChangePasswordModal(false);
                 navigate("/merchant/security-settings");
+                clearInputs();
             }
         } catch (error) {
+            setNewPassword('');
             if (error.response && error.response.status === 400) {
                 toast({ title: "Error", description: "Failed to change password. Please try again.", variant: "destructive" });
             } else {
@@ -92,7 +101,10 @@ const SecuritySettings = () => {
                         <div className="flex justify-end gap-2">
                             <button 
                                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                                onClick={() => setShowVerifyModal(false)}
+                                onClick={() => {
+                                    setShowVerifyModal(false);
+                                    clearInputs();
+                                }}
                             >
                                 Cancel
                             </button>
@@ -123,7 +135,10 @@ const SecuritySettings = () => {
                         <div className="flex justify-end gap-2">
                             <button 
                                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                                onClick={() => setShowChangePasswordModal(false)}
+                                onClick={() => {
+                                    setShowChangePasswordModal(false);
+                                    clearInputs();
+                                }}
                             >
                                 Cancel
                             </button>
