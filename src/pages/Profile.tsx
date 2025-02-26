@@ -1,14 +1,41 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import L from "leaflet";
 import { toast } from '@/hooks/use-toast';
+
 
 const baseURL = import.meta.env.VITE_API_URL || "api";
 
+const customIcon = new L.Icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41], 
+  iconAnchor: [12, 41], 
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const MerchantDetails = () => {
+  const [activeButton, setActiveButton] = useState("");
+
+  const handleCurrentLocation = () => {
+      setActiveButton("current");
+      requestLocation();
+  };
+
+  const handlePinLocation = () => {
+      setActiveButton("pin");
+      setShowModal(true);
+  };
+
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [number, setNumber] = useState("");
@@ -39,6 +66,15 @@ const MerchantDetails = () => {
         }
       );
     }
+  };
+
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        setLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+      },
+    });
+    return null;
   };
 
   const getUserDetails = async () => {
@@ -152,22 +188,47 @@ const MerchantDetails = () => {
             <div>
                 <label className="block text-gray-700">Location</label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
-                    <button className="bg-green-600 hover:bg-green-700 text-white py-2 rounded-md" onClick={() => {
-                    setIsUsingCurrentLocation(true);
-                    requestLocation();
-                    }}>Use Current Location</button>
-                    <button className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-md" onClick={() => setIsUsingCurrentLocation(false)}>Pin a New Location</button>
-                </div>
+                  <Button
+                      type="button"
+                      className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                          activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                      }`}
+                      onClick={handleCurrentLocation}
+                      disabled={activeButton === "current"}
+                  >
+                      Use Current Location
+                  </Button>
+
+                  <Button
+                      type="button"
+                      className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                          activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                      }`}
+                      onClick={handlePinLocation}
+                      disabled={activeButton === "pin"}
+                  >
+                      Pin a Location
+                  </Button>
+              </div>
                 <div className="h-[300px] rounded-lg overflow-hidden border">
-                    {location ? (
-                    <MapContainer center={[location.latitude, location.longitude]} zoom={16} style={{ height: "100%", width: "100%" }}>
+                  {!showModal && (
+                    <div className="h-[300px] rounded-lg overflow-hidden border">
+                      {location ? (
+                        <MapContainer 
+                        key={`${location?.latitude}-${location?.longitude}`} 
+                        center={[location.latitude, location.longitude]} 
+                        zoom={16}
+                        className="h-full w-full">
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        <LocationSelector />
-                    </MapContainer>
-                    ) : (
-                    <div className="h-full flex items-center justify-center bg-accent/10">
-                        <p>Fetching Location...</p>
-                    </div>
+                        {location && (
+                        <Marker icon={customIcon} position={[location.latitude, location.longitude]} />
+                        )}
+                        <MapEvents />
+                        </MapContainer>
+                        ) : (
+                        <p className="flex items-center justify-center h-full">Loading map...</p>
+                        )}
+                      </div>
                     )}
                 </div>
                 
@@ -177,6 +238,27 @@ const MerchantDetails = () => {
             <button className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleSave}>Save</button>
             <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
         </div>
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+              <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
+              <div className="h-[400px]">
+                <MapContainer 
+                key={`${location?.latitude}-${location?.longitude}`} 
+                center={[location.latitude, location.longitude]} 
+                zoom={16} className="h-full">
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
+                  <MapEvents />
+                </MapContainer>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button className="bg-gray-700 hover:bg-gray-600 text-white" onClick={() => setShowModal(false)}>Cancel</Button>
+                <Button className="bg-green-700 hover:bg-green-600 text-white" onClick={() => setShowModal(false)}>Confirm Location</Button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
