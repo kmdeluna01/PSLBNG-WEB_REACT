@@ -33,7 +33,50 @@ L.Icon.Default.mergeOptions({
 const baseURL = import.meta.env.VITE_API_URL || "";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+  const [location, setLocation] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [activeButton, setActiveButton] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
+  const handleVerifyPasswordChange = (e) => {
+
+    if (password && e.target.value !== password) {
+      setPasswordError("Passwords do not match");
+    } else {
+      setPasswordError("");
+    }
+  };
+
+
+  const handleEmailValidation = (e) => {
+    const email = e.target.value;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+      setEmailError("Invalid email address (e.g., merchant@pslbng.com)");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handlePhoneValidation = (e) => {
+    const phone = e.target.value;
+    if (!/^09\d{9}$/.test(phone)) {
+      setPhoneError("Please follow the format (09XX XXXX XXX)");
+    } else {
+      setPhoneError("");
+    }
+  };
+
 
   const handleCurrentLocation = () => {
       setActiveButton("current");
@@ -45,10 +88,6 @@ const RegisterPage = () => {
       setShowModal(true);
   };
 
-  const navigate = useNavigate();
-  const [location, setLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     requestLocation();
@@ -115,26 +154,64 @@ const RegisterPage = () => {
           <img src={logo} alt="Pasalubong Logo" className="max-w-xs" />
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="shopName">Shop Name</Label>
-            <Input id="shopName" name="shopName" required className="mt-2" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="shopName">Shop Name</Label>
+              <Input id="shopName" name="shopName" required className="mt-2" />
+            </div>
+            <div>
+              <Label htmlFor="registerEmail">Email</Label>
+              <Input 
+                id="registerEmail" 
+                name="registerEmail" 
+                type="email" 
+                required 
+                className="mt-2" 
+                onInput={handleEmailValidation} 
+              />
+              {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+            </div>
           </div>
           <div>
             <Label htmlFor="phoneNumber">Phone Number</Label>
-            <Input id="phoneNumber" name="phoneNumber" required maxLength={11} pattern="09\d{9}" placeholder="09XX XXX XXXX" className="mt-2" />
+            <Input 
+              id="phoneNumber" 
+              name="phoneNumber" 
+              required 
+              maxLength={11} 
+              placeholder="09XX XXX XXXX" 
+              className="mt-2" 
+              onInput={handlePhoneValidation} 
+            />
+            {phoneError && <p className="text-red-500 text-sm">{phoneError}</p>}
           </div>
-          <div>
-            <Label htmlFor="registerEmail">Email</Label>
-            <Input id="registerEmail" name="registerEmail" type="email" required className="mt-2" />
-          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="registerPassword">Password</Label>
-            <Input id="registerPassword" name="registerPassword" type="password" required className="mt-2" />
+            <Input 
+              id="registerPassword" 
+              name="registerPassword" 
+              type="password" 
+              required 
+              className="mt-2" 
+              onInput={handlePasswordChange} 
+            />
           </div>
           <div>
             <Label htmlFor="verifyPassword">Repeat Password</Label>
-            <Input id="verifyPassword" name="verifyPassword" type="password" required className="mt-2" />
+            <Input 
+              id="verifyPassword" 
+              name="verifyPassword" 
+              type="password" 
+              required 
+              className="mt-2" 
+              onInput={handleVerifyPasswordChange} 
+            />
+            {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
           </div>
+        </div>
+
           <div>
             <Label>Location</Label>
             {!showModal && (
