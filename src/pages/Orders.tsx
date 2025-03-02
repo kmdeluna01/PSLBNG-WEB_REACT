@@ -42,65 +42,154 @@ const PendingOrder = () => {
         }
     };
 
-    const handlePrepare = async (orderId, productId) => {
+    const handlePrepare = async (orderId) => {
+        console.log(orderId)
         if (!window.confirm("Start preparing this order?")) return;
         try {
-            const vendorID = localStorage.getItem("vendorId");
-            if (!vendorID) return;
-            await axios.put(`${baseURL}/merchant/${vendorID}/orders/${orderId}/prepare/${productId}`);
+            await axios.put(`${baseURL}/merchant/orders/${orderId}/prepare`);
             fetchOrders();
         } catch (error) {
             console.error("Error preparing order:", error);
         }
     };
 
+    const handleShip = async (orderId) => {
+        
+        if (!window.confirm("Is the order Shipped Out?")) return;
+        try {
+            await axios.put(`${baseURL}/merchant/orders/${orderId}/ship`);
+            fetchOrders();
+        } catch (error) {
+            console.error("Error shipping:", error);
+        }
+    };
+
     return (
         <div className="min-h-screen p-4">
-            <div className="flex items-center space-x-4 mb-4">
-                <h1 className="text-xl font-bold text-gray-800">Orders</h1>
-            </div>
-            <div className="flex justify-around bg-white p-2 rounded-md shadow-md mb-4">
-                {['incoming', 'pending', 'history'].map(tab => (
-                    <button 
-                        key={tab}
-                        onClick={() => setSelectedTab(tab)}
-                        className={`py-2 px-4 text-sm font-semibold ${selectedTab === tab ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'}`}
-                    >
-                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                ))}
-            </div>
-            <div>
-                {selectedTab === 'incoming' && orders.length > 0 ? (
-                    orders.map(order => (
-                        <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
-                            <div className="flex justify-between items-center">
-                                <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
-                                <button onClick={() => handlePrepare(order._id, order.items[0].product_id)}
-                                    className="text-green-600 font-bold">PREPARE</button>
+    <div className="flex items-center space-x-4 mb-4">
+        <h1 className="text-xl font-bold text-gray-800">Orders</h1>
+    </div>
+    <div className="flex justify-around bg-white p-2 rounded-md shadow-md mb-4">
+        {['incoming', 'pending', 'shipped', 'history'].map(tab => (
+            <button 
+                key={tab}
+                onClick={() => setSelectedTab(tab)}
+                className={`py-2 px-4 text-sm font-semibold ${selectedTab === tab ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'}`}
+            >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+        ))}
+    </div>
+    <div>
+        {selectedTab === 'incoming' && orders.length > 0 ? (
+            orders
+            .filter(order => order.status === 'incoming') 
+            .map(order => (
+                <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <div className="flex justify-between items-center">
+                        <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
+                        <button 
+                            onClick={() => handlePrepare(order._id)}
+                            className="text-green-600 font-bold"
+                        >
+                            PREPARE
+                        </button>
+                    </div>
+                    {order.items.map(item => {
+                        const product = vendorPendings.find(p => p._id === item.product_id);
+                        return (
+                            <div key={item.product_id} className="flex items-center mt-3">
+                                <img 
+                                    src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                    className="w-20 h-20 rounded-md object-cover" 
+                                    alt="product"
+                                />
+                                <div className="ml-4">
+                                    <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
+                                    <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                    <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
+                                    <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
+                                </div>
                             </div>
-                            {order.items.map(item => {
-                                const product = vendorPendings.find(p => p._id === item.product_id);
-                                return (
-                                    <div key={item.product_id} className="flex items-center mt-3">
-                                        <img src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
-                                            className="w-20 h-20 rounded-md object-cover" alt="product"/>
-                                        <div className="ml-4">
-                                            <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                            <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
-                                            <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
-                                            <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                        );
+                    })}
+                </div>
+            ))
+        ) : selectedTab === 'pending' && orders.length > 0 ? (
+            orders
+                .filter(order => order.status === 'pending') 
+                .map(order => (
+                    <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
+                        <div className="flex justify-between items-center">
+                            <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
+                            <button 
+                                onClick={() => handleShip(order._id)}
+                                className="text-green-600 font-bold"
+                            >
+                                SHIP OUT
+                            </button>
                         </div>
-                    ))
-                ) : (
-                    <p className="text-center text-gray-600">No Pending Orders</p>
-                )}
-            </div>
-        </div>
+                        {order.items.map(item => {
+                            const product = vendorPendings.find(p => p._id === item.product_id);
+                            return (
+                                <div key={item.product_id} className="flex items-center mt-3">
+                                    <img 
+                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        className="w-20 h-20 rounded-md object-cover" 
+                                        alt="product"
+                                    />
+                                    <div className="ml-4">
+                                        <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
+                                        <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                        <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
+                                        <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))
+        ) : selectedTab === 'pending' && orders.length > 0 ? (
+            orders
+                .filter(order => order.status === 'shipped') 
+                .map(order => (
+                    <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
+                        <div className="flex justify-between items-center">
+                            <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
+                            <button 
+                                className="text-green-600 font-bold"
+                            >
+                                Awaiting to be Received
+                            </button>
+                        </div>
+                        {order.items.map(item => {
+                            const product = vendorPendings.find(p => p._id === item.product_id);
+                            return (
+                                <div key={item.product_id} className="flex items-center mt-3">
+                                    <img 
+                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        className="w-20 h-20 rounded-md object-cover" 
+                                        alt="product"
+                                    />
+                                    <div className="ml-4">
+                                        <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
+                                        <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                        <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
+                                        <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))
+        ) : (
+            <p className="text-center text-gray-600">
+                {selectedTab === 'pending' ? 'No Pending Orders' : 'No Incoming Orders'}
+            </p>
+        )}
+    </div>
+</div>
+
     );
 };
 
