@@ -9,12 +9,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  Home,
   Package,
   ShoppingCart,
   User,
   Settings,
   LogOut,
+  ChartArea
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
@@ -24,6 +24,7 @@ const menuItems = [
   { title: "Orders", icon: ShoppingCart, path: "/merchant/orders" },
   { title: "Profile", icon: User, path: "/merchant/details" },
   { title: "Settings", icon: Settings, path: "/merchant/security-settings" },
+  { title: "Sales", icon: ChartArea, path: "/merchant/sales" },
 ];
 
 export function AppSidebar() {
