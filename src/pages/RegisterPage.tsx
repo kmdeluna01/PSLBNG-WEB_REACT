@@ -8,45 +8,51 @@ import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import logo from "../assets/logo.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import L from "leaflet";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const customIcon = new L.Icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41], 
+  iconAnchor: [12, 41], 
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const baseURL = import.meta.env.VITE_API_URL || "";
 
-const customIcon = new L.Icon({
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png',
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-    shadowSize: [41, 41],
-  });
-  
-
-// Fix marker icons
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
-});
-
 const RegisterPage = () => {
+  const [activeButton, setActiveButton] = useState("");
+
+  const handleCurrentLocation = () => {
+      setActiveButton("current");
+      requestLocation();
+  };
+
+  const handlePinLocation = () => {
+      setActiveButton("pin");
+      setShowModal(true);
+  };
+
   const navigate = useNavigate();
   const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     requestLocation();
   }, []);
-
-  useEffect(() => {
-    if (isUsingCurrentLocation) {
-      requestLocation();
-    }
-  }, [isUsingCurrentLocation]);
 
   const requestLocation = () => {
     if (navigator.geolocation) {
@@ -131,21 +137,50 @@ const RegisterPage = () => {
           </div>
           <div>
             <Label>Location</Label>
-            <div className="h-[300px] rounded-lg overflow-hidden border">
-              {location ? (
-                <MapContainer center={[location.latitude, location.longitude]} zoom={16} className="h-full w-full">
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location.latitude, location.longitude]} icon="customIcon" />
-                  <MapEvents />
-                </MapContainer>
-              ) : (
-                <p className="flex items-center justify-center h-full">Loading map...</p>
-              )}
-            </div>
+            {!showModal && (
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                {location ? (
+                  <MapContainer 
+                    key={`${location?.latitude}-${location?.longitude}`} 
+                    center={[location.latitude, location.longitude]} 
+                    zoom={16} 
+                    className="h-full w-full"
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {location && (
+                      <Marker icon={customIcon} position={[location.latitude, location.longitude]} />
+                    )}
+                    <MapEvents />
+                  </MapContainer>
+                ) : (
+                  <p className="flex items-center justify-center h-full">Loading map...</p>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => requestLocation()}>Use Current Location</Button>
-              <Button type="button" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" onClick={() => setShowModal(true)}>Pin a Location</Button>
-            </div>
+              <Button
+                  type="button"
+                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                      activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                  }`}
+                  onClick={handleCurrentLocation}
+                  disabled={activeButton === "current"}
+              >
+                  Use Current Location
+              </Button>
+
+              <Button
+                  type="button"
+                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
+                      activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                  }`}
+                  onClick={handlePinLocation}
+                  disabled={activeButton === "pin"}
+              >
+                  Pin a Location
+              </Button>
+          </div>
+          
           </div>
           <Button type="submit" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -160,15 +195,18 @@ const RegisterPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
               <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
               <div className="h-[400px]">
-                <MapContainer center={[location?.latitude || 14.5995, location?.longitude || 120.9842]} zoom={14} className="h-full">
+                <MapContainer 
+                key={`${location?.latitude}-${location?.longitude}`} 
+                center={[location.latitude, location.longitude]} 
+                zoom={16} className="h-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location?.latitude, location?.longitude]}  />
+                  {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
                   <MapEvents />
                 </MapContainer>
               </div>
               <div className="mt-4 flex justify-end gap-2">
-                <Button onClick={() => setShowModal(false)}>Cancel</Button>
-                <Button onClick={() => setShowModal(false)}>Confirm Location</Button>
+                <Button className="bg-gray-700 hover:bg-gray-600 text-white" onClick={() => setShowModal(false)}>Cancel</Button>
+                <Button className="bg-green-700 hover:bg-green-600 text-white" onClick={() => setShowModal(false)}>Confirm Location</Button>
               </div>
             </div>
           </div>
