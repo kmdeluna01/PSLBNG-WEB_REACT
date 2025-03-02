@@ -32,6 +32,7 @@ const PendingOrder = () => {
         try {
             const response = await axios.get(`${baseURL}/merchant/${vendorID}/orders/pending`);
             const fetchedOrders = response.data;
+            console.log(fetchedOrders);
             setOrders(fetchedOrders);
             const productIds = fetchedOrders.flatMap(order => order.items.map(item => item.product_id));
             if (productIds.length === 0) return;
@@ -70,7 +71,7 @@ const PendingOrder = () => {
         <h1 className="text-xl font-bold text-gray-800">Orders</h1>
     </div>
     <div className="flex justify-around bg-white p-2 rounded-md shadow-md mb-4">
-        {['incoming', 'pending', 'shipped', 'history'].map(tab => (
+        {['incoming', 'pending', 'shipped', 'delivered'].map(tab => (
             <button 
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
@@ -149,7 +150,7 @@ const PendingOrder = () => {
                         })}
                     </div>
                 ))
-        ) : selectedTab === 'pending' && orders.length > 0 ? (
+        ) : selectedTab === 'shipped' && orders.length > 0 ? (
             orders
                 .filter(order => order.status === 'shipped') 
                 .map(order => (
@@ -184,7 +185,15 @@ const PendingOrder = () => {
                 ))
         ) : (
             <p className="text-center text-gray-600">
-                {selectedTab === 'pending' ? 'No Pending Orders' : 'No Incoming Orders'}
+                {selectedTab === 'incoming' && orders.length === 0
+                    ? 'No Incoming Orders'
+                    : selectedTab === 'pending' && orders.length === 0
+                    ? 'No Pending Orders'
+                    : selectedTab === 'shipped' && orders.length === 0
+                    ? 'No Shipped Orders'
+                    : selectedTab === 'history' && orders.length === 0
+                    ? 'No Delivered Orders'
+                    : ''}
             </p>
         )}
     </div>
