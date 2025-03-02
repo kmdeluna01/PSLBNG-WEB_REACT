@@ -3,18 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { vendorAuth } from "@/services/api";
+import axios from "axios";
+import logo from "../assets/logo.png";
+import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import { useMapEvents } from "react-leaflet/hooks";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import logo from "../assets/logo.png";
-import axios from "axios";
-const baseURL = import.meta.env.VITE_API_URL || '';
 
-// Fix for default marker icon
+const baseURL = import.meta.env.VITE_API_URL || "";
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
@@ -27,13 +26,13 @@ interface LocationMarker {
   longitude: number;
 }
 
+
 const Auth = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const [location, setLocation] = useState<LocationMarker | null>(null);
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
-  const [mapKey, setMapKey] = useState(0);
-  const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -48,9 +47,9 @@ const Auth = () => {
     }
   }, [isUsingCurrentLocation]);
 
-  useEffect(() => {
-    setMapKey((prevKey) => prevKey + 1);
-  }, [location]);
+  const validatePassword = (password) => {
+    return password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password);
+  };
 
   const requestLocation = () => {
     if (navigator.geolocation) {
@@ -68,74 +67,73 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        setLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+      },
+    });
+    return null;
+  };
+
+
+  const handleSubmit = async (e, formType) => {
     e.preventDefault();
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const isRegister = (e.currentTarget.getAttribute('data-form-type') === 'register');
 
     try {
-      if (isRegister) {
+      if (formType === "register") {
+        const password = formData.get("registerPassword");
+        const verifyPassword = formData.get("verifyPassword");
+        const phoneNumber = formData.get("phoneNumber")?.toString();
+
+        if (password !== verifyPassword) {
+          throw new Error("Passwords do not match");
+        }
+
+        if (!validatePassword(password)) {
+          throw new Error("Password must be at least 8 characters, include an uppercase letter and a number.");
+        }
+
+        if (!/^\d{10,15}$/.test(phoneNumber)) {
+          throw new Error("Invalid phone number. Must be 10-15 digits.");
+        }
+
         const registerData = {
-          name: formData.get('shopName') as string,
-          email: formData.get('registerEmail') as string,
-          number: formData.get('phoneNumber') as string,
+          name: formData.get("shopName"),
+          email: formData.get("registerEmail"),
+          number: formData.get("phoneNumber"),
           location: {
             latitude: location?.latitude || 0,
             longitude: location?.longitude || 0,
           },
-          password: formData.get('registerPassword') as string,
+          password: formData.get("registerPassword"),
         };
 
-        try {
-          await axios.post(`${baseURL}/merchant-register`, registerData, {
-            headers: { "Content-Type": "application/json" },
-          });
-          navigate("/");
-          toast({
-            title: "Success",
-            description: "Merchant registered successfully",
-          });
-        } catch (error) {
-          console.error("Registration Error:", error);
-          alert("Something went wrong during registration.");
-        } finally {
-          setIsLoading(false);
-        }
-
-        await vendorAuth.register(registerData);
-        toast({
-          title: "Success",
-          description: "Account created successfully! Please login.",
-        });
+        await axios.post(`${baseURL}/merchant-register`, registerData);
+        toast({ title: "Success", description: "Account created successfully!" });
+        setActiveTab("login");
       } else {
-        try {
-          const email = formData.get('email') as string
-          const password = formData.get('password') as string
-          const response = await axios.post(`${baseURL}/merchant-login`, { email, password });
-        
-          if (response.data.status === "ok") {
-            const { token, vendor } = response.data.data;
-            localStorage.setItem("token", token);
-            localStorage.setItem("isMerchantAuth", "true");
-            localStorage.setItem("vendorId", vendor._id);
-            navigate("/merchant");
-          } else {
-            throw new Error("Login failed");
-          }
-        } catch (error) {
-          console.error(error);
-          toast({
-            title: "Error",
-            description: error.response?.data?.message || "An error occurred",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoading(false);
+        const loginData = {
+          email: formData.get("email"),
+          password: formData.get("password"),
+        };
+
+        const response = await axios.post(`${baseURL}/merchant-login`, loginData);
+
+        if (response.data.status === "ok") {
+          const { token, vendor } = response.data.data;
+          localStorage.setItem("token", token);
+          localStorage.setItem("isMerchantAuth", "true");
+          localStorage.setItem("vendorId", vendor._id);
+          navigate("/merchant");
+        } else {
+          throw new Error("Login failed");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
         description: error.response?.data?.message || "An error occurred",
@@ -146,85 +144,91 @@ const Auth = () => {
     }
   };
 
-  const MapEvents = () => {
-    useMapEvents({
-      click(e) {
-        if (!isUsingCurrentLocation) {
-          setLocation({
-            latitude: e.latlng.lat,
-            longitude: e.latlng.lng,
-          });
-        }
-      },
-    });
-    return null;
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-vendor-100">
-      <div className="w-full max-w-4xl p-6 animate-fadeIn flex">
-        {activeTab === "login" && (
-          <div className="w-1/3 flex items-center justify-center p-4">
-            <img src={logo} alt="PSLBNG Logo" className="h-auto" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+      <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-6 flex overflow-hidden">
+        <div className="w-1/2 hidden lg:flex items-center justify-center">
+          <img src={logo} alt="PSLBNG Logo" className="h-24" />
+        </div>
+        <div className="w-full lg:w-1/2 p-6">
+          <div className="flex justify-center mb-6">
+            <Button
+              variant={activeTab === "login" ? "default" : "outline"}
+              onClick={() => setActiveTab("login")}
+              className="w-1/2"
+            >
+              Login
+            </Button>
+            <Button
+              variant={activeTab === "register" ? "default" : "outline"}
+              onClick={() => setActiveTab("register")}
+              className="w-1/2"
+            >
+              Register
+            </Button>
           </div>
-        )}
-        <div className={`flex flex-col h-full p-6 ${activeTab === "login" ? "w-2/3" : "w-full"}`}>
-          <Tabs defaultValue="login" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleSubmit} data-form-type="login" className="space-y-4">
-                <div className="space-y-2">
+
+          <AnimatePresence mode="wait">
+            {activeTab === "login" ? (
+              <motion.div
+                key="login"
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -300, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <form onSubmit={(e) => handleSubmit(e, "login")}>                    
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" required />
-                </div>
-                <div className="space-y-2">
+                  <Input id="email" name="email" type="email" required className="mb-4" />
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" name="password" type="password" required />
-                </div>
-                <Button type="submit" className="w-full" variant="custom" disabled={isLoading}>
-                  {isLoading ? "Loading..." : "Login"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="register">
-              <form onSubmit={handleSubmit} data-form-type="register" className="space-y-4">
-                <div className="space-y-2">
+                  <Input id="password" name="password" type="password" required className="mb-6" />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Logging in..." : "Login"}
+                  </Button>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="register"
+                initial={{ x: -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 300, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <form onSubmit={(e) => handleSubmit(e, "register")}>
                   <Label htmlFor="shopName">Shop Name</Label>
-                  <Input id="shopName" name="shopName" required />
-                </div>
-                <div className="space-y-2">
+                  <Input id="shopName" name="shopName" required className="mb-4" />
                   <Label htmlFor="phoneNumber">Phone Number</Label>
-                  <Input id="phoneNumber" name="phoneNumber" required />
-                </div>
-                <div className="space-y-2">
+                  <Input 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    required 
+                    className="mb-4" 
+                    defaultValue="+63" 
+                    maxLength={13} 
+                    pattern="\+63\d{10}"
+                    placeholder="+63XXXXXXXXXX"
+                  />
                   <Label htmlFor="registerEmail">Email</Label>
-                  <Input id="registerEmail" name="registerEmail" type="email" required />
-                </div>
-                <div className="space-y-2">
+                  <Input id="registerEmail" name="registerEmail" type="email" required className="mb-4" />
                   <Label htmlFor="registerPassword">Password</Label>
-                  <Input id="registerPassword" name="registerPassword" type="password" required />
-                </div>
-                <div className="space-y-2">
+                  <Input id="registerPassword" name="registerPassword" type="password" required className="mb-6" />
+                  <Label htmlFor="registerPassword">Repeat Password</Label>
+                  <Input id="verifyPassword" name="verifyPassword" type="password" required className="mb-6" />
                   <Label>Location</Label>
-                  <div className="h-[300px] rounded-lg overflow-hidden border">
-                    {location ? (
-                      <MapContainer
-                        key={mapKey}
+                  <div className="h-[300px] rounded-lg overflow-hidden border mb-4">
+                    {location && location.latitude && location.longitude ? (
+                      <MapContainer 
+                        center={[location.latitude, location.longitude]} 
+                        zoom={16} 
                         className="h-full w-full"
-                        center={[location.latitude, location.longitude]}
-                        zoom={16}
                       >
                         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        <Marker position={[location.latitude, location.longitude] as L.LatLngExpression} />
+                        <Marker position={[location.latitude, location.longitude]} />
                         <MapEvents />
                       </MapContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center bg-accent/10">
-                        <p>Loading your location...</p>
-                      </div>
+                      <p>Loading map...</p>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-4 mt-2">
@@ -246,13 +250,13 @@ const Auth = () => {
                       Pin a New Location
                     </Button>
                   </div>
-                </div>
-                <Button type="submit" className="w-full" variant="custom" disabled={isLoading}>
-                  {isLoading ? "Creating Account..." : "Create Account"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

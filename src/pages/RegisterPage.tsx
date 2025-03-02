@@ -13,6 +13,17 @@ import logo from "../assets/logo.png";
 
 const baseURL = import.meta.env.VITE_API_URL || "";
 
+const customIcon = new L.Icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png',
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png',
+    shadowSize: [41, 41],
+  });
+  
+
 // Fix marker icons
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
@@ -124,7 +135,7 @@ const RegisterPage = () => {
               {location ? (
                 <MapContainer center={[location.latitude, location.longitude]} zoom={16} className="h-full w-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location.latitude, location.longitude]} />
+                  <Marker position={[location.latitude, location.longitude]} icon="customIcon" />
                   <MapEvents />
                 </MapContainer>
               ) : (
@@ -151,7 +162,7 @@ const RegisterPage = () => {
               <div className="h-[400px]">
                 <MapContainer center={[location?.latitude || 14.5995, location?.longitude || 120.9842]} zoom={14} className="h-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[location?.latitude, location?.longitude]} />
+                  <Marker position={[location?.latitude, location?.longitude]}  />
                   <MapEvents />
                 </MapContainer>
               </div>
