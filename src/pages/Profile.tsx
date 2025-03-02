@@ -144,15 +144,6 @@ const MerchantDetails = () => {
     }
   };
 
-  const LocationSelector = () => {
-    useMapEvents({
-      click(e) {
-        setLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng });
-      },
-    });
-    return location ? <Marker position={[location.latitude, location.longitude]} /> : null;
-  };
-
   return (
     <div className="mx-auto">
         <div className="flex items-center mb-6">
