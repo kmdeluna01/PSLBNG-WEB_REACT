@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import MerchantDetails from "./pages/Profile";
 import PendingOrder from "./pages/Orders";
 import SecuritySettings from "./pages/SecuritySettings";
+import SalesDashboard from "./pages/Sales";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route
+          path="/merchant/sales"
+          element={
+            <ProtectedRoute>
+              <ProductsLayout>
+                <SalesDashboard/>
+              </ProductsLayout>
+            </ProtectedRoute>
+          }
+        />
           <Route
             path="/merchant/security-settings"
             element={
