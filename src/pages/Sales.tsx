@@ -39,90 +39,77 @@ export default function SalesDashboard() {
   }, [vendorId]);
 
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold text-vendor-800">Sales Dashboard</h1>
+    <div className="p-6 space-y-8 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-extrabold text-gray-800">📊 Sales</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-blue-400 text-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Total Sales</CardTitle>
+            <CardTitle className="text-lg">Items Sold</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">₱{totalSales.toLocaleString()}</p>
+            <p className="text-4xl font-extrabold">{totalSales.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-lg shadow-md bg-gradient-to-r from-green-500 to-green-400 text-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Revenue</CardTitle>
+            <CardTitle className="text-lg">Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">₱{revenue.toLocaleString()}</p>
+            <p className="text-4xl font-extrabold">₱{revenue.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-lg shadow-md bg-gradient-to-r from-yellow-500 to-yellow-400 text-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Profit</CardTitle>
+            <CardTitle className="text-lg">Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">₱{profit.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Low Stock Alerts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lowStockAlerts.length ? (
-              <ul className="space-y-2">
-                {lowStockAlerts.map((product) => (
-                  <li key={product._id} className="text-red-500">
-                    {product.productName} - {product.quantity} left
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No low stock products</p>
-            )}
+            <p className="text-4xl font-extrabold">₱{profit.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Top Selling Products</CardTitle>
+            <CardTitle className="text-lg text-gray-700">Top Selling Products</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
-              {topProducts.map((product) => (
-                <li key={product._id} className="flex justify-between">
+            <ul className="space-y-4">
+            {[...topProducts]
+              .sort((a, b) => b.sold - a.sold)
+              .map((product) => (
+                <li key={product._id} className="flex justify-between text-gray-600">
                   <span>{product.productName}</span>
-                  <span>{product.sales} sales</span>
+                  <span className="font-semibold">{product.sold} sold</span>
                 </li>
-              ))}
+              ))
+            }
             </ul>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Sales Analytics</CardTitle>
+            <CardTitle className="text-lg text-gray-700">Low Stock Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topProducts}>
-                <XAxis dataKey="productName" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="sales" fill="#3B82F6" />
-              </BarChart>
-            </ResponsiveContainer>
+            {lowStockAlerts.length ? (
+              <ul className="space-y-4">
+                {lowStockAlerts.map((product) => (
+                  <li key={product._id} className="text-red-500 font-semibold">
+                    {product.productName} - {product.quantity} left
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No low stock products</p>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
+
   );
 }
