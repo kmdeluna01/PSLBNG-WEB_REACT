@@ -32,7 +32,6 @@ const PendingOrder = () => {
         try {
             const response = await axios.get(`${baseURL}/merchant/${vendorID}/orders/pending`);
             const fetchedOrders = response.data;
-            console.log(fetchedOrders);
             setOrders(fetchedOrders);
             const productIds = fetchedOrders.flatMap(order => order.items.map(item => item.product_id));
             if (productIds.length === 0) return;
@@ -44,7 +43,6 @@ const PendingOrder = () => {
     };
 
     const handlePrepare = async (orderId) => {
-        console.log(orderId)
         if (!window.confirm("Start preparing this order?")) return;
         try {
             await axios.put(`${baseURL}/merchant/orders/${orderId}/prepare`);
@@ -56,7 +54,7 @@ const PendingOrder = () => {
 
     const handleShip = async (orderId) => {
         
-        if (!window.confirm("Is the order Shipped Out?")) return;
+        if (!window.confirm("Is the order ready to be shipped out?")) return;
         try {
             await axios.put(`${baseURL}/merchant/orders/${orderId}/ship`);
             fetchOrders();

@@ -22,9 +22,9 @@ import logo from "../../assets/logo.png";
 const menuItems = [
   { title: "Products", icon: Package, path: "/merchant" },
   { title: "Orders", icon: ShoppingCart, path: "/merchant/orders" },
+  { title: "Sales", icon: ChartArea, path: "/merchant/sales" },
   { title: "Profile", icon: User, path: "/merchant/details" },
   { title: "Settings", icon: Settings, path: "/merchant/security-settings" },
-  { title: "Sales", icon: ChartArea, path: "/merchant/sales" },
 ];
 
 export function AppSidebar() {
