@@ -97,6 +97,7 @@ const MerchantDetails = () => {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     const vendorId = localStorage.getItem("vendorId");
 
     if (!name || !email || !number || !location) {
@@ -116,7 +117,7 @@ const MerchantDetails = () => {
             title: "Success",
             description: "Profile edited successfully!",
           });
-        navigate(-1);
+        navigate("/merchant");
         getUserDetails();
       } catch (error) {
         console.error(error);
@@ -126,6 +127,7 @@ const MerchantDetails = () => {
             variant: "destructive"
         });
       }
+      setSaving(false);
   };
 
   const handleDelete = async () => {
@@ -228,11 +230,11 @@ const MerchantDetails = () => {
         </div>
         <div className="flex flex-row justify-between">
         <button 
-            onClick={handleUploadProduct}
-            disabled={isUploading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+            onClick={handleSave}
+            disabled={saving}
+            className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
           >
-            {isUploading ? "Uploading..." : "Upload"}
+            {saving ? "Uploading..." : "Upload"}
           </button>
             <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
         </div>
