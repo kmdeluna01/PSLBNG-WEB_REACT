@@ -39,7 +39,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="sticky top-0 h-screen">
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full overflow-y-auto">
         <div className="p-6">
           <img src={logo} alt="PSLBNG Logo" className="h-auto" />
         </div>
@@ -57,18 +57,18 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <div className="mt-auto py-6">
+                <button
+                  className="sticky w-full flex items-center text-red-600 hover:text-red-800 transition-colors p-2"
+                  onClick={logOut}
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <div className="mt-auto p-4">
-          <button
-            className="w-full flex items-center text-vendor-600 hover:text-vendor-800 transition-colors p-2"
-            onClick={logOut}
-          >
-            <LogOut className="mr-3 h-4 w-4" />
-            <span>Logout</span>
-          </button>
-        </div>
       </SidebarContent>
     </Sidebar>
   );
