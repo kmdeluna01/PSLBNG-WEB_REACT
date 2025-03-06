@@ -80,7 +80,7 @@ export default function SalesDashboard() {
               .map((product) => (
                 <li key={product._id} className="flex justify-between text-gray-600">
                   <span>{product.productName}</span>
-                  <span className="font-semibold">{product.sold} sold</span>
+                  <span className="font-semibold">{product.totalSold} sold</span>
                 </li>
               ))
             }

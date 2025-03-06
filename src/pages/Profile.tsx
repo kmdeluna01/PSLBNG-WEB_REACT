@@ -41,6 +41,7 @@ const MerchantDetails = () => {
   const [number, setNumber] = useState("");
   const [location, setLocation] = useState(null);
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getUserDetails();
@@ -226,7 +227,13 @@ const MerchantDetails = () => {
             </div>
         </div>
         <div className="flex flex-row justify-between">
-            <button className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleSave}>Save</button>
+        <button 
+            onClick={handleUploadProduct}
+            disabled={isUploading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
             <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
         </div>
         {showModal && (

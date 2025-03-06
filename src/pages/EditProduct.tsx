@@ -18,6 +18,7 @@ const EditProduct = () => {
   const [quantity, setQuantity] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -57,6 +58,7 @@ const EditProduct = () => {
   };
 
   const handleEditProduct = async () => {
+    setIsUploading(true);
     const formData = new FormData();
     formData.append('productName', productName);
     formData.append('price', price);
@@ -84,6 +86,7 @@ const EditProduct = () => {
         variant: "destructive",
       });
     }
+    setIsUploading(false);
   };
 
   const handleDelete = async () => {
@@ -152,8 +155,8 @@ const EditProduct = () => {
               rows={4}
             />
             <div className="flex justify-between">
-              <Button variant="custom" onClick={handleEditProduct}>
-                Update
+              <Button variant="custom" onClick={handleEditProduct} disabled={isUploading}>
+                {isUploading ? "Saving..." : "Save"}
               </Button>
               <Button
                 variant="destructive"

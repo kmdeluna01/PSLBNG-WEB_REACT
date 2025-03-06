@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 
 const baseURL = import.meta.env.VITE_API_URL || "api";
 
-const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
+const UploadProduct = ({ open, onClose, onProductUploaded }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [productName, setProductName] = useState("");
@@ -15,6 +15,7 @@ const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState(null);
   const [vendorId, setVendorId] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const vendorId = localStorage.getItem("vendorId");
@@ -37,6 +38,8 @@ const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
       });
     }
 
+    setIsUploading(true);
+    
     const formData = new FormData();
     formData.append("vendorID", vendorId);
     formData.append("productName", productName);
@@ -56,6 +59,7 @@ const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
       const { productId } = response.data;
 
       if (!productId) {
+        setIsUploading(false);
         return toast({
           title: "Error",
           description: "Uploading Product Unsuccessful!",
@@ -85,6 +89,8 @@ const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
         description: "Uploading Product Unsuccessful!",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -101,7 +107,13 @@ const UploadProduct = ({ open, onClose, onProductUploaded  }) => {
           <input type="number" placeholder="Available Stock" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full px-4 py-2 border rounded-md" />
           <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-4 py-2 border rounded-md"></textarea>
 
-          <button onClick={handleUploadProduct} className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Upload</button>
+          <button 
+            onClick={handleUploadProduct}
+            disabled={isUploading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
         </div>
       </DialogContent>
     </Dialog>
