@@ -73,14 +73,14 @@ const EditProduct = () => {
       });
       toast({
         title: "Success",
-        description: "Product edited successfully!",
+        description: "Product updated successfully!",
       });
       navigate(-1);
     } catch (error) {
-      console.error("Error editing product", error);
+      console.error("Error updating product", error);
       toast({
         title: "Error",
-        description: "Failed to edit product",
+        description: "Failed to update product",
         variant: "destructive",
       });
     }
