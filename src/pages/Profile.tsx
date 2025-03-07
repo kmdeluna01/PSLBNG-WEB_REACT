@@ -118,10 +118,15 @@ const MerchantDetails = () => {
         navigate(-1);
         getUserDetails();
       } catch (error) {
-        console.error(error);
+        console.error(error.response.data);
+
+        // Extract the message from error.response.data
+        const errorMessage = error.response?.data?.message || "An unknown error occurred.";
+
+        // Display the toast with the extracted message
         toast({
             title: "Error",
-            description: "Editing Profile Unsuccessful!",
+            description: errorMessage, // Use the extracted message
             variant: "destructive"
         });
       }
