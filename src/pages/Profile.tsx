@@ -23,25 +23,27 @@ const customIcon = new L.Icon({
 
 const MerchantDetails = () => {
   const [activeButton, setActiveButton] = useState("");
-
-  const handleCurrentLocation = () => {
-      setActiveButton("current");
-      requestLocation();
-  };
-
-  const handlePinLocation = () => {
-      setActiveButton("pin");
-      setShowModal(true);
-  };
-
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [number, setNumber] = useState("");
   const [location, setLocation] = useState(null);
-  const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
+  const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleCurrentLocation = () => {
+    setIsUsingCurrentLocation(true);
+    setActiveButton("current");
+    requestLocation();
+  };
+
+  const handlePinLocation = () => {
+      setIsUsingCurrentLocation(false);
+      setActiveButton("pin");
+      setShowModal(true);
+  };
 
   useEffect(() => {
     getUserDetails();
@@ -54,6 +56,8 @@ const MerchantDetails = () => {
   }, [isUsingCurrentLocation]);
 
   const requestLocation = () => {
+    setLoading(true);
+    setIsUsingCurrentLocation(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -67,6 +71,7 @@ const MerchantDetails = () => {
         }
       );
     }
+    setLoading(false);
   };
 
   const MapEvents = () => {
@@ -186,7 +191,7 @@ const MerchantDetails = () => {
 
             <div>
                 <label className="block text-gray-700">Location</label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
+                <div className="grid grid-cols-2 gap-4 mt-2 pb-4">
                   <Button
                       type="button"
                       className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
@@ -212,7 +217,7 @@ const MerchantDetails = () => {
                 <div className="h-[300px] rounded-lg overflow-hidden border">
                   {!showModal && (
                     <div className="h-[300px] rounded-lg overflow-hidden border">
-                      {location ? (
+                      {location && !loading ? (
                         <MapContainer 
                         key={`${location?.latitude}-${location?.longitude}`} 
                         center={[location.latitude, location.longitude]} 
@@ -239,7 +244,7 @@ const MerchantDetails = () => {
             disabled={saving}
             className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
           >
-            {saving ? "Uploading..." : "Upload"}
+            {saving ? "Saving..." : "Save"}
           </button>
             <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
         </div>
