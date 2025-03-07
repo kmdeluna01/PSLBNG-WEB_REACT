@@ -31,9 +31,10 @@ const EditProduct = () => {
           setPrice(product.price.toString());
           setQuantity(product.quantity.toString());
           setDescription(product.description);
-          if (product.image) {
-            setPhoto({ uri: `${baseURL}/${product.image.replace(/\\/g, '/')}` });
-          }
+          setPhoto(`${baseURL}/uploads/${product.image}`);
+          //if (product.image) {
+          //setPhoto({ uri: `${baseURL}/${product.image.replace(/\\/g, '/')}` });
+          //}
         } else {
           throw new Error("Product not found");
         }
@@ -122,7 +123,7 @@ const EditProduct = () => {
             <Input id="photo" type="file" onChange={choosePhotoFromLibrary} />
             {photo && (
               <img
-                src={photo instanceof File ? URL.createObjectURL(photo) : photo.uri}
+                src={photo}
                 alt={photo.uri}
                 className="w-auto h-48 mx-auto block object-cover rounded-lg mt-4"
               />
