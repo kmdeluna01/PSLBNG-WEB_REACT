@@ -124,8 +124,8 @@ const EditProduct = () => {
             {photo && (
               <img
                 src={photo}
-                alt={photo.uri}
-                className="w-auto h-48 mx-auto block object-cover rounded-lg mt-4"
+                alt={productName}
+                className="w-auto h-48 mx-auto object-cover rounded-lg mt-4"
               />
             )}
             <Label htmlFor="productName">Product Name</Label>

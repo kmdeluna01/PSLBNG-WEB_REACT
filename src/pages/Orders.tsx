@@ -99,10 +99,10 @@ const PendingOrder = () => {
                         return (
                             <div key={item.product_id} className="flex items-center mt-3">
                                 <img 
-                                    src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                    src={product?.image ? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
                                     className="w-20 h-20 rounded-md object-cover" 
                                     alt="product"
-                                />
+                                    />
                                 <div className="ml-4">
                                     <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
                                     <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
@@ -133,7 +133,7 @@ const PendingOrder = () => {
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
                                     <img 
-                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
                                         className="w-20 h-20 rounded-md object-cover" 
                                         alt="product"
                                     />
@@ -166,7 +166,7 @@ const PendingOrder = () => {
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
                                     <img 
-                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
                                         className="w-20 h-20 rounded-md object-cover" 
                                         alt="product"
                                     />
@@ -200,7 +200,7 @@ const PendingOrder = () => {
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
                                     <img 
-                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
                                         className="w-20 h-20 rounded-md object-cover" 
                                         alt="product"
                                     />
@@ -233,7 +233,7 @@ const PendingOrder = () => {
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
                                     <img 
-                                        src={product?.image ? `${baseURL}/${product.image}` : "https://via.placeholder.com/150"} 
+                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
                                         className="w-20 h-20 rounded-md object-cover" 
                                         alt="product"
                                     />

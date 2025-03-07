@@ -130,7 +130,7 @@ export default function Index() {
               {product.image && (
                 <div className="relative h-48 w-full">
                   <img
-                    src={`https://pslbng-mobile-1.onrender.com/${product.image}`}
+                    src={`${baseURL}/uploads/${product.image}`}
                     alt={product.productName}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
