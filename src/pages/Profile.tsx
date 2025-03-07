@@ -41,6 +41,7 @@ const MerchantDetails = () => {
   const [number, setNumber] = useState("");
   const [location, setLocation] = useState(null);
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getUserDetails();
@@ -96,6 +97,7 @@ const MerchantDetails = () => {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     const vendorId = localStorage.getItem("vendorId");
 
     if (!name || !email || !number || !location) {
@@ -115,7 +117,7 @@ const MerchantDetails = () => {
             title: "Success",
             description: "Profile edited successfully!",
           });
-        navigate(-1);
+        navigate("/merchant");
         getUserDetails();
       } catch (error) {
         console.error(error.response.data);
@@ -130,6 +132,7 @@ const MerchantDetails = () => {
             variant: "destructive"
         });
       }
+      setSaving(false);
   };
 
   const handleDelete = async () => {
@@ -231,7 +234,13 @@ const MerchantDetails = () => {
             </div>
         </div>
         <div className="flex flex-row justify-between">
-            <button className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleSave}>Save</button>
+        <button 
+            onClick={handleSave}
+            disabled={saving}
+            className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+          >
+            {saving ? "Uploading..." : "Upload"}
+          </button>
             <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
         </div>
         {showModal && (

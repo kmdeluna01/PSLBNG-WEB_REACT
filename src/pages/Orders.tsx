@@ -183,7 +183,8 @@ const PendingOrder = () => {
                 ))
         ) : selectedTab === 'delivered' && orders.length > 0 ? (
             orders
-                .filter(order => order.status === 'delivered') 
+                .filter(order => order.status === 'delivered')
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map(order => (
                     <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
                         <div className="flex justify-between items-center">
