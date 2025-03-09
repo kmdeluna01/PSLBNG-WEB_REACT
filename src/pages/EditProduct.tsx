@@ -31,7 +31,7 @@ const EditProduct = () => {
           setPrice(product.price.toString());
           setQuantity(product.quantity.toString());
           setDescription(product.description);
-          setPhoto(`${baseURL}/uploads/${product.image}`);
+          setPhoto(product.image);
           //if (product.image) {
           //setPhoto({ uri: `${baseURL}/${product.image.replace(/\\/g, '/')}` });
           //}
@@ -123,7 +123,7 @@ const EditProduct = () => {
             <Input id="photo" type="file" onChange={choosePhotoFromLibrary} />
             {photo && (
               <img
-                src={photo}
+                src={photo || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                 alt={productName}
                 className="w-auto h-48 mx-auto object-cover rounded-lg mt-4"
               />
