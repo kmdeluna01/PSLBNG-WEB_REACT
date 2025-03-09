@@ -98,9 +98,9 @@ const PendingOrder = () => {
                         const product = vendorPendings.find(p => p._id === item.product_id);
                         return (
                             <div key={item.product_id} className="flex items-center mt-3">
-                                <img 
-                                    src={product?.image ? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
-                                    className="w-20 h-20 rounded-md object-cover" 
+                                <img
+                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                    className={`w-20 h-20 rounded-md object-cover`}
                                     alt="product"
                                     />
                                 <div className="ml-4">
@@ -114,7 +114,8 @@ const PendingOrder = () => {
                     })}
                 </div>
             ))
-        ) : selectedTab === 'pending' && orders.length > 0 ? (
+        ) : 
+        selectedTab === 'pending' && orders.length > 0 ? (
             orders
                 .filter(order => order.status === 'pending') 
                 .map(order => (
@@ -132,10 +133,10 @@ const PendingOrder = () => {
                             const product = vendorPendings.find(p => p._id === item.product_id);
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
-                                    <img 
-                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
-                                        className="w-20 h-20 rounded-md object-cover" 
-                                        alt="product"
+                                    <img
+                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                    className={`w-20 h-20 rounded-md object-cover`}
+                                    alt="product"
                                     />
                                     <div className="ml-4">
                                         <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
@@ -165,10 +166,10 @@ const PendingOrder = () => {
                             const product = vendorPendings.find(p => p._id === item.product_id);
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
-                                    <img 
-                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
-                                        className="w-20 h-20 rounded-md object-cover" 
-                                        alt="product"
+                                    <img
+                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                    className={`w-20 h-20 rounded-md object-cover`}
+                                    alt="product"
                                     />
                                     <div className="ml-4">
                                         <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
@@ -199,10 +200,10 @@ const PendingOrder = () => {
                             const product = vendorPendings.find(p => p._id === item.product_id);
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
-                                    <img 
-                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
-                                        className="w-20 h-20 rounded-md object-cover" 
-                                        alt="product"
+                                    <img
+                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                    className={`w-20 h-20 rounded-md object-cover`}
+                                    alt="product"
                                     />
                                     <div className="ml-4">
                                         <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
@@ -232,10 +233,10 @@ const PendingOrder = () => {
                             const product = vendorPendings.find(p => p._id === item.product_id);
                             return (
                                 <div key={item.product_id} className="flex items-center mt-3">
-                                    <img 
-                                        src={product?.image? `${baseURL}/uploads/${product.image}` : "https://via.placeholder.com/150"} 
-                                        className="w-20 h-20 rounded-md object-cover" 
-                                        alt="product"
+                                    <img
+                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                    className={`w-20 h-20 rounded-md object-cover`}
+                                    alt="product"
                                     />
                                     <div className="ml-4">
                                         <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
