@@ -53,8 +53,7 @@ const PendingOrder = () => {
     };
 
     const handleShip = async (orderId) => {
-        
-        if (!window.confirm("Is the order ready to be shipped out?")) return;
+        if (!window.confirm("Is the order ready to be shipped?")) return;
         try {
             await axios.put(`${baseURL}/merchant/orders/${orderId}/ship`);
             fetchOrders();
