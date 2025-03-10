@@ -90,6 +90,13 @@ const EditProduct = () => {
     setIsUploading(false);
   };
 
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setPhoto(file);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       await axios.delete(`${baseURL}/merchant/${product_id}/delete`);
@@ -120,14 +127,14 @@ const EditProduct = () => {
         <CardContent>
           <div className="space-y-4">
             <Label htmlFor="photo">Change Photo</Label>
-            <Input id="photo" type="file" onChange={choosePhotoFromLibrary} />
-            {photo && (
-              <img
-                src={photo || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
-                alt={productName}
-                className="w-auto h-48 mx-auto object-cover rounded-lg mt-4"
-              />
-            )}
+            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="block w-full" />
+            {photo && (photo instanceof File ? (
+              <img src={URL.createObjectURL(photo)} alt="Preview" className="w-40 h-40 object-cover rounded mx-auto" />
+            ) : (
+              <img src={photo} alt="Preview" className="w-40 h-40 object-cover rounded mx-auto" />
+            ))}
+
+
             <Label htmlFor="productName">Product Name</Label>
             <Input
               id="productName"
