@@ -63,21 +63,32 @@ const PendingOrder = () => {
     };
 
     return (
-        <div className="min-h-screen p-4">
-    <div className="flex items-center space-x-4 mb-4">
-        <h1 className="text-xl font-bold text-gray-800">Orders</h1>
-    </div>
+        <div className="min-h-screen">
+            <div className="flex items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Orders</h2>
+            </div>
     <div className="flex justify-around bg-white p-2 rounded-md shadow-md mb-4">
-        {['incoming', 'pending', 'shipped out', 'delivered', 'canceled'].map(tab => (
+        {['incoming', 'pending', 'shipped out', 'delivered', 'canceled'].map(tab => {
+            const notificationCount = orders.filter(order => order.status === tab).length; // Adjust based on your data
+
+            return (
             <button 
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
-                className={`py-2 px-4 text-sm font-semibold ${selectedTab === tab ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'}`}
+                className={`relative py-2 px-4 text-sm font-semibold ${selectedTab === tab ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-600'}`}
             >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                
+                {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {notificationCount}
+                </span>
+                )}
             </button>
-        ))}
+            );
+        })}
     </div>
+
     <div>
         {selectedTab === 'incoming' && orders.length > 0 ? (
             orders

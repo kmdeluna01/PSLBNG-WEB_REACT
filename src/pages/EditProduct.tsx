@@ -116,7 +116,7 @@ const EditProduct = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="min-h-screen">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
             <Button variant="outline" onClick={() => navigate(-1)}>

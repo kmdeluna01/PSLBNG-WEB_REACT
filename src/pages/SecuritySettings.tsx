@@ -73,7 +73,7 @@ const SecuritySettings = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen p-4">
+        <div className="min-h-screen">
             <div className="flex items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Security Settings</h2>
             </div>

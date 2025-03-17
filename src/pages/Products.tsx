@@ -11,7 +11,7 @@ import UploadProduct from "@/components/UploadProduct";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || '';
 
-export default function Index() {
+export default function Products() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -154,9 +154,11 @@ export default function Index() {
   };
 
   return (
-    <div className="p-2 space-y-2">
+    <div className="min-h-screen">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold text-vendor-800">Products</h1>
+        <div className="flex items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Products</h2>
+        </div>
         <Button onClick={handleAddProduct} variant="custom">
           <Plus className="mr-2 h-4 w-4" />
           Add Product

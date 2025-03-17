@@ -36,9 +36,12 @@ export default function SalesDashboard() {
   }, [vendorId]);
 
   return (
-    <div className="p-6 space-y-8 min-h-screen">
-      <h1 className="text-3xl font-extrabold text-gray-800">📊 Sales</h1>
+    <div className="min-h-screen">
+      <div className="flex items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Sales</h2>
+      </div>
 
+      <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-blue-400 text-white hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
@@ -105,6 +108,7 @@ export default function SalesDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
 

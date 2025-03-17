@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProductsLayout } from "@/components/layout/ProductsLayout";
-import Index from "./pages/Index";
+import Products from "./pages/Products";
 import EditProduct from "./pages/EditProduct";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
@@ -14,6 +14,7 @@ import MerchantDetails from "./pages/Profile";
 import PendingOrder from "./pages/Orders";
 import SecuritySettings from "./pages/SecuritySettings";
 import SalesDashboard from "./pages/Sales";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -42,11 +43,21 @@ const App = () => (
           <Route path="/" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route
-            path="/merchant"
+            path="/merchant/"
             element={
               <ProtectedRoute>
                 <ProductsLayout>
-                  <Index />
+                  <Dashboard />
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/merchant/products"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <Products />
                 </ProductsLayout>
               </ProtectedRoute>
             }

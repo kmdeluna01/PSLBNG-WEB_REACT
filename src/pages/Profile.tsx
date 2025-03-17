@@ -158,7 +158,7 @@ const MerchantDetails = () => {
   };
 
   return (
-    <div className="mx-auto">
+    <div className="min-h-screen">
         <div className="flex items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
         </div>
