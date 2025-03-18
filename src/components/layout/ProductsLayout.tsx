@@ -94,8 +94,7 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
           <AppSidebar />
         </div>
         <div className="flex-1 flex flex-col min-h-screen">
-          <div className="bg-white shadow-md p-4 flex justify-between items-center">
-            <h1 className="text-lg font-semibold text-gray-700">Welcome!</h1>
+          <div className="bg-white shadow-md px-4 flex justify-end items-center">
             <div className="flex items-center gap-4">
               <DropdownMenu onOpenChange={(isOpen) => isOpen && handleNotification()}>
                 <DropdownMenuTrigger>
