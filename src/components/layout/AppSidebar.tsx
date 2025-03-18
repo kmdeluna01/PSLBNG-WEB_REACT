@@ -11,9 +11,6 @@ import {
 import {
   Package,
   ShoppingCart,
-  User,
-  Settings,
-  LogOut,
   ChartArea,
   LayoutDashboardIcon,
 } from "lucide-react";
@@ -35,8 +32,6 @@ export function AppSidebar() {
     { title: "Products", icon: Package, path: "/merchant/products" },
     { title: "Orders", icon: ShoppingCart, path: "/merchant/orders", hasAlert: orderAlert },
     { title: "Sales", icon: ChartArea, path: "/merchant/sales" },
-    { title: "Profile", icon: User, path: "/merchant/details" },
-    { title: "Settings", icon: Settings, path: "/merchant/security-settings" },
   ];
 
   useEffect(() => {
@@ -60,13 +55,6 @@ export function AppSidebar() {
     } catch (error) {
       console.error("Error fetching user data: ", error);
     }
-  };
-
-  const logOut = () => {
-    localStorage.removeItem("isMerchantAuth");
-    localStorage.removeItem("uploadedProducts");
-    localStorage.removeItem("token");
-    navigate("/");
   };
 
   return (
@@ -106,15 +94,6 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
-              <div className="mt-auto py-6">
-                <button
-                  className="sticky w-full flex items-center text-red-600 hover:text-red-800 transition-colors p-2"
-                  onClick={logOut}
-                >
-                  <LogOut className="mr-3 h-4 w-4" />
-                  <span>Logout</span>
-                </button>
-              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
