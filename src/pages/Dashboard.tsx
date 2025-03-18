@@ -49,7 +49,7 @@ export default function Dashboard() {
             <div className="space-y-8">
                 <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                     <CardHeader>
-                        <CardTitle className="text-lg text-gray-700">Monthly Sales</CardTitle>
+                        <CardTitle className="text-lg text-gray-700">Monthly Sales 2025</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>

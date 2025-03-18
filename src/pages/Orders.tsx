@@ -68,7 +68,7 @@ const PendingOrder = () => {
                 <h2 className="text-2xl font-bold text-gray-800">Orders</h2>
             </div>
             <div className="flex justify-around bg-white p-2 rounded-md shadow-md mb-4">
-                {['incoming', 'pending', 'shipped out', 'delivered', 'canceled'].map(tab => {
+                {['incoming', 'pending', 'shipped', 'delivered', 'canceled'].map(tab => {
                     const notificationCount = orders.filter(order => order.status === tab).length; // Adjust based on your data
 
                     return (
@@ -159,7 +159,7 @@ const PendingOrder = () => {
                                     })}
                                 </div>
                             ))
-                    ) : selectedTab === 'shipped out' && orders.length > 0 ? (
+                    ) : selectedTab === 'shipped' && orders.length > 0 ? (
                         orders
                             .filter(order => order.status === 'shipped')
                             .map(order => (
