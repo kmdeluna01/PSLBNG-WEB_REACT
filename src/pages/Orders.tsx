@@ -13,17 +13,6 @@ const PendingOrder = () => {
         fetchOrders();
     }, []);
 
-    const fetchProductDetails = async (productIds) => {
-        try {
-            const responses = await Promise.all(
-                productIds.map(productId => axios.get(`${baseURL}/product-details/${productId}`))
-            );
-            return responses.map(response => response.data.data);
-        } catch (error) {
-            console.error("Error fetching product details: ", error);
-            return [];
-        }
-    };
 
     const fetchOrders = async () => {
         const vendorID = localStorage.getItem("vendorId");
@@ -33,10 +22,16 @@ const PendingOrder = () => {
             const response = await axios.get(`${baseURL}/merchant/${vendorID}/orders/pending`);
             const fetchedOrders = response.data;
             setOrders(fetchedOrders);
-            const productIds = fetchedOrders.flatMap(order => order.items.map(item => item.product_id));
-            if (productIds.length === 0) return;
-            const products = await fetchProductDetails(productIds);
-            setVendorPendings(products);
+            const productIds = fetchedOrders.flatMap(order => {
+                if (order.items && Array.isArray(order.items)) {
+                    return order.items.map(item => item.product_id);
+                }
+                return [];  // Return an empty array if `order.items` is not defined or not an array
+            });
+            setVendorPendings(productIds);
+            console.log("Fetched Orders:", fetchedOrders);
+            console.log("Product IDs:", productIds);
+
         } catch (error) {
             console.error("Error fetching pending orders:", error);
         }
@@ -105,17 +100,16 @@ const PendingOrder = () => {
                                     </button>
                                 </div>
                                 {order.items.map(item => {
-                                    const product = vendorPendings.find(p => p._id === item.product_id);
                                     return (
                                         <div key={item.product_id} className="flex items-center mt-3">
                                             <img
-                                                src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                                src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                                                 className={`w-20 h-20 rounded-md object-cover`}
                                                 alt="product"
                                             />
                                             <div className="ml-4">
-                                                <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                                <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                                <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                                                <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
                                                 <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
                                                 <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
                                             </div>
@@ -140,17 +134,16 @@ const PendingOrder = () => {
                                         </button>
                                     </div>
                                     {order.items.map(item => {
-                                        const product = vendorPendings.find(p => p._id === item.product_id);
                                         return (
                                             <div key={item.product_id} className="flex items-center mt-3">
                                                 <img
-                                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                                    src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                                                     className={`w-20 h-20 rounded-md object-cover`}
                                                     alt="product"
                                                 />
                                                 <div className="ml-4">
-                                                    <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                                    <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                                    <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                                                    <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
                                                     <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
                                                     <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
                                                 </div>
@@ -173,17 +166,16 @@ const PendingOrder = () => {
                                         </button>
                                     </div>
                                     {order.items.map(item => {
-                                        const product = vendorPendings.find(p => p._id === item.product_id);
                                         return (
                                             <div key={item.product_id} className="flex items-center mt-3">
                                                 <img
-                                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                                    src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                                                     className={`w-20 h-20 rounded-md object-cover`}
                                                     alt="product"
                                                 />
                                                 <div className="ml-4">
-                                                    <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                                    <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                                    <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                                                    <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
                                                     <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
                                                     <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
                                                 </div>
@@ -194,8 +186,7 @@ const PendingOrder = () => {
                             ))
                     ) : selectedTab === 'delivered' && orders.length > 0 ? (
                         orders
-                            .filter(order => order.status === 'delivered')
-                            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                            .filter(order => order.status === 'shipped')
                             .map(order => (
                                 <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
                                     <div className="flex justify-between items-center">
@@ -203,21 +194,20 @@ const PendingOrder = () => {
                                         <button
                                             className="text-green-600 font-bold"
                                         >
-                                            Delivered
+                                            Awaiting to be Received
                                         </button>
                                     </div>
                                     {order.items.map(item => {
-                                        const product = vendorPendings.find(p => p._id === item.product_id);
                                         return (
-                                            <div key={item.product_id} className="flex items-center mt-3">
+                                            <div key={item._id} className="flex items-center mt-3">
                                                 <img
-                                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                                    src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                                                     className={`w-20 h-20 rounded-md object-cover`}
                                                     alt="product"
                                                 />
                                                 <div className="ml-4">
-                                                    <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                                    <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                                    <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                                                    <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
                                                     <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
                                                     <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
                                                 </div>
@@ -226,6 +216,7 @@ const PendingOrder = () => {
                                     })}
                                 </div>
                             ))
+
                     ) : selectedTab === 'canceled' && orders.length > 0 ? (
                         orders
                             .filter(order => order.status === 'cancelled')
@@ -240,17 +231,16 @@ const PendingOrder = () => {
                                         </button>
                                     </div>
                                     {order.items.map(item => {
-                                        const product = vendorPendings.find(p => p._id === item.product_id);
                                         return (
                                             <div key={item.product_id} className="flex items-center mt-3">
                                                 <img
-                                                    src={product?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
+                                                    src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=Loading'}
                                                     className={`w-20 h-20 rounded-md object-cover`}
                                                     alt="product"
                                                 />
                                                 <div className="ml-4">
-                                                    <h3 className="font-medium text-gray-900">{product?.productName || 'Loading...'}</h3>
-                                                    <p className="text-sm text-gray-700">₱{product?.price || 'Loading...'}</p>
+                                                    <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                                                    <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
                                                     <p className="text-sm text-gray-700">Quantity Ordered: <span className="font-bold">{item.quantity}</span></p>
                                                     <p className="text-sm text-gray-700">Mode of Payment: {order.paymentMode}</p>
                                                 </div>
