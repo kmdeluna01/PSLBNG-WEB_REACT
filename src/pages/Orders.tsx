@@ -156,7 +156,7 @@ const PendingOrder = () => {
                                     <div className="flex justify-between items-center">
                                         <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
                                         <button
-                                            className="text-green-600 font-bold"
+                                            className="text-green-500 font-bold"
                                         >
                                             Awaiting to be Received
                                         </button>
@@ -182,16 +182,11 @@ const PendingOrder = () => {
                             ))
                     ) : selectedTab === 'delivered' && orders.length > 0 ? (
                         orders
-                            .filter(order => order.status === 'shipped')
+                            .filter(order => order.status === 'delivered')
                             .map(order => (
                                 <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
                                     <div className="flex justify-between items-center">
                                         <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
-                                        <button
-                                            className="text-green-600 font-bold"
-                                        >
-                                            Awaiting to be Received
-                                        </button>
                                     </div>
                                     {order.items.map(item => {
                                         return (
@@ -215,13 +210,13 @@ const PendingOrder = () => {
 
                     ) : selectedTab === 'canceled' && orders.length > 0 ? (
                         orders
-                            .filter(order => order.status === 'cancelled')
+                            .filter(order => order.status === 'canceled')
                             .map(order => (
                                 <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
                                     <div className="flex justify-between items-center">
                                         <h2 className="font-semibold text-gray-800">Order #{order.orderNum}</h2>
                                         <button
-                                            className="text-green-600 font-bold"
+                                            className="text-red-600 font-bold"
                                         >
                                             Canceled
                                         </button>
