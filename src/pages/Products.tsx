@@ -123,32 +123,39 @@ export default function Products() {
         {userProducts.map((product) => (
           <button
             key={product._id}
-            className="overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow"
+            className="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full"
             onClick={() => navigate(`/products/${product._id}/edit`)}
           >
-            <Card className="overflow-hidden">
+            <div className="relative rounded-lg">
+              {/* Image Section */}
               {product.image && (
-                <div className="relative h-48 w-full">
+                <div className="w-full h-48 md:h-56 lg:h-64">
                   <img
-                    src={product.image }
+                    src={product.image}
                     alt={product.productName}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-t-lg"
                   />
                 </div>
               )}
-              <CardHeader className="text-left">
-                <CardTitle className="text-xl text-vendor-800">{product.productName}</CardTitle>
+
+              {/* Card Header */}
+              <div className="p-4">
+                <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">{product.productName}</h3>
                 <p className="text-vendor-600 font-medium">
                   ₱{product.price ? product.price.toLocaleString() : "N/A"}
                 </p>
                 <p className="text-sm text-vendor-500">Stock: {product.quantity}</p>
-              </CardHeader>
-              <CardContent className="text-left">
-                <p className="text-vendor-600 text-sm line-clamp-2">{product.description}</p>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Card Content */}
+              <div className="p-4 text-left">
+                <p className="text-vendor-600 text-sm line-clamp-1">{product.description}</p>
+              </div>
+            </div>
           </button>
         ))}
+
+
       </div>
     );
   };
@@ -157,7 +164,7 @@ export default function Products() {
     <div className="min-h-screen">
       <div className="flex justify-between items-center">
         <div className="flex items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Products</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Products</h2>
         </div>
         <Button onClick={handleAddProduct} variant="custom">
           <Plus className="mr-2 h-4 w-4" />
