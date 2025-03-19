@@ -13,7 +13,6 @@ const PendingOrder = () => {
         fetchOrders();
     }, []);
 
-
     const fetchOrders = async () => {
         const vendorID = localStorage.getItem("vendorId");
         if (!vendorID) return;
@@ -29,9 +28,6 @@ const PendingOrder = () => {
                 return [];  // Return an empty array if `order.items` is not defined or not an array
             });
             setVendorPendings(productIds);
-            console.log("Fetched Orders:", fetchedOrders);
-            console.log("Product IDs:", productIds);
-
         } catch (error) {
             console.error("Error fetching pending orders:", error);
         }

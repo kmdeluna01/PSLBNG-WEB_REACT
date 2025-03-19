@@ -14,7 +14,6 @@ export default function SalesDashboard() {
   const [revenue, setRevenue] = useState(0);
   const [profit, setProfit] = useState(0);
   const [deliveredOrders, setDeliveredOrders] = useState([]);
-  console.log(deliveredOrders)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -142,40 +141,42 @@ export default function SalesDashboard() {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[80vw] max-h-[80vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Sold Items</DialogTitle>
           </DialogHeader>
           {deliveredOrders.length > 0 ? (
-            <ul className="space-y-4">
+            <ul className="space-y-4 h-full">
               {deliveredOrders.map(order => (
                 <div key={order._id} className="mt-4 p-4 border-b border-gray-200">
                   <h3 className="font-semibold text-gray-900">Order #{order.orderNum}</h3>
                   <p className="text-sm text-gray-600">Mode of Payment: {order.paymentMode}</p>
 
                   {/* Loop through the items in each order */}
-                  {order.items.map(item => (
-                    <div key={item._id} className="flex items-center mt-3 bg-gray-100 p-3 rounded-md">
-                      <img
-                        src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=No+Image'}
-                        className="w-20 h-20 rounded-md object-cover"
-                        alt={item.product_id?.productName || 'Product Image'}
-                      />
-                      <div className="ml-4">
-                        <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
-                        <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
-                        <p className="text-sm text-gray-700">Sold <span className="font-bold">{item.quantity} items</span></p>
+                  <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+                    {order.items.map(item => (
+                      <div key={item._id} className="flex items-center mt-3 bg-gray-100 p-3 rounded-md">
+                        <img
+                          src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=No+Image'}
+                          className="w-20 h-20 rounded-md object-cover"
+                          alt={item.product_id?.productName || 'Product Image'}
+                        />
+                        <div className="ml-4">
+                          <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                          <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
+                          <p className="text-sm text-gray-700">Sold <span className="font-bold">{item.quantity} items</span></p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ))}
-
             </ul>
           ) : (
             <p className="text-gray-500">No delivered orders</p>
           )}
         </DialogContent>
+
       </Dialog>
     </div>
   );
