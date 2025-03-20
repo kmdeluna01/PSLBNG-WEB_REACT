@@ -38,7 +38,6 @@ export default function SalesDashboard() {
       setProfit(profit || 0);
     } catch (error) {
       console.error("Error fetching sales data:", error);
-      toast({ title: "Error", description: error?.response?.data?.error || "Failed to fetch data", variant: "destructive" });
     } finally {
       setLoading(false);
     }

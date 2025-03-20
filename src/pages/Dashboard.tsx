@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import axios from "axios";
+import { View } from "lucide-react";
 
 const baseURL = import.meta.env.VITE_API_URL || "";
 
@@ -12,7 +13,7 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("delivered");
 
     const vendorId = localStorage.getItem("vendorId");
-    
+
     console.log(vendorId)
 
     useEffect(() => {
@@ -55,13 +56,20 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={monthlyRevenue}>
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Line type="monotone" dataKey="totalRevenue" stroke="#4F46E5" strokeWidth={2} />
-                            </LineChart>
+                            {monthlyRevenue.length > 0 ? (
+                                <LineChart data={monthlyRevenue}>
+                                    <XAxis dataKey="month" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Line type="monotone" dataKey="totalRevenue" stroke="#4F46E5" strokeWidth={2} />
+                                </LineChart>
+                            ) : (
+                                <div style={{ justifyContent: 'center', alignItems: 'center', height: "100%" }}>
+                                    <p style={{ fontSize: 16, color: "#999", textAlign: "center" }}>No sales data available</p>
+                                </div>
+                            )}
                         </ResponsiveContainer>
+
                     </CardContent>
                 </Card>
 

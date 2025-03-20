@@ -45,7 +45,6 @@ export function AppSidebar() {
 
     try {
       const response = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
-      console.log(response.data)
       const fetchedOrders = response.data;
       const incomingOrdersCount = fetchedOrders.filter(order => order.status === "incoming").length;
       setIncomingOrders(incomingOrdersCount);
