@@ -12,6 +12,8 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("delivered");
 
     const vendorId = localStorage.getItem("vendorId");
+    
+    console.log(vendorId)
 
     useEffect(() => {
         fetchSalesData();

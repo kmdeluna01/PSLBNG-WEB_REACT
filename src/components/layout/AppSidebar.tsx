@@ -40,10 +40,12 @@ export function AppSidebar() {
 
   const getUserDetails = async () => {
     const vendorId = localStorage.getItem("vendorId");
+    //console.log(vendorId)
     if (!vendorId) return;
 
     try {
       const response = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
+      console.log(response.data)
       const fetchedOrders = response.data;
       const incomingOrdersCount = fetchedOrders.filter(order => order.status === "incoming").length;
       setIncomingOrders(incomingOrdersCount);

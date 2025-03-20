@@ -15,10 +15,12 @@ const PendingOrder = () => {
 
     const fetchOrders = async () => {
         const vendorID = localStorage.getItem("vendorId");
+        console.log(vendorID)
         if (!vendorID) return;
 
         try {
             const response = await axios.get(`${baseURL}/merchant/${vendorID}/orders/pending`);
+            //console.log(response)
             const fetchedOrders = response.data;
             setOrders(fetchedOrders);
             const productIds = fetchedOrders.flatMap(order => {
