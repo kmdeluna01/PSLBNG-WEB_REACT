@@ -15,7 +15,6 @@ const PendingOrder = () => {
 
     const fetchOrders = async () => {
         const vendorID = localStorage.getItem("vendorId");
-        console.log(vendorID)
         if (!vendorID) return;
 
         try {

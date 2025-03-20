@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, MessageSquareText, X, CircleUserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import UploadProduct from "@/components/UploadProduct";
 import axios from "axios";
-const baseURL = import.meta.env.VITE_API_URL || '';
+
+const baseURL = import.meta.env.VITE_API_URL || "";
 
 export default function Products() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -18,6 +19,10 @@ export default function Products() {
   const vendorId = localStorage.getItem("vendorId");
   const [userProducts, setUserProducts] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedComments, setSelectedComments] = useState([]);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+
+  //console.log("User Products:", userProducts)
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -72,19 +77,23 @@ export default function Products() {
     }
   };
 
-  const onRefresh = () => {
-    getUserProducts();
-  };
-
   useEffect(() => {
     getUserProducts();
   }, []);
-
 
   const handleAddProduct = () => {
     setIsDialogOpen(true);
   };
 
+  const openCommentsModal = (comments) => {
+    setSelectedComments(comments || []);
+    setIsCommentsModalOpen(true);
+  };
+
+  const closeCommentsModal = () => {
+    setIsCommentsModalOpen(false);
+    setSelectedComments([]);
+  };
 
   const renderContent = () => {
     if (isLoading || isRefreshing) {
@@ -119,11 +128,11 @@ export default function Products() {
     }
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 py-4">
         {userProducts.map((product) => (
-          <button
+          <div
             key={product._id}
-            className="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full"
+            className="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full cursor-pointer"
             onClick={() => navigate(`/products/${product._id}/edit`)}
           >
             <div className="relative rounded-lg">
@@ -139,8 +148,10 @@ export default function Products() {
               )}
 
               {/* Card Header */}
-              <div className="p-4">
-                <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">{product.productName}</h3>
+              <div className="p-4 text-left">
+                <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
+                  {product.productName}
+                </h3>
                 <p className="text-vendor-600 font-medium">
                   ₱{product.price ? product.price.toLocaleString() : "N/A"}
                 </p>
@@ -149,13 +160,25 @@ export default function Products() {
 
               {/* Card Content */}
               <div className="p-4 text-left">
-                <p className="text-vendor-600 text-sm line-clamp-1">{product.description}</p>
+                <p className="text-vendor-600 text-sm line-clamp-1">
+                  {product.description}
+                </p>
+
+                {/* Open Comments Modal Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openCommentsModal(product.comments);
+                  }}
+                  className="flex py-2 text-gray-600 hover:text-gray-800"
+                >
+                  <MessageSquareText className="w-5 h-5 cursor-pointer" />
+                  <span className="ml-2 text-sm">{product.comments?.length || 0}</span>
+                </button>
               </div>
             </div>
-          </button>
+          </div>
         ))}
-
-
       </div>
     );
   };
@@ -163,9 +186,7 @@ export default function Products() {
   return (
     <div className="min-h-screen">
       <div className="flex justify-between items-center">
-        <div className="flex items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Products</h2>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-800">Products</h2>
         <Button onClick={handleAddProduct} variant="custom">
           <Plus className="mr-2 h-4 w-4" />
           Add Product
@@ -178,6 +199,39 @@ export default function Products() {
         onProductUploaded={getUserProducts}
       />
 
+      {/* Comments Modal */}
+      {isCommentsModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-xl font-semibold">Comments</h3>
+              <button onClick={closeCommentsModal}>
+                <X className="w-5 h-5 text-gray-600 hover:text-gray-800" />
+              </button>
+            </div>
+            <div className="mt-4 max-h-60 overflow-y-auto">
+              {selectedComments.length > 0 ? (
+                selectedComments.map((comment, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 border-b border-gray-200">
+                    <CircleUserRound className="w-6 h-6 text-gray-500" /> {/* Buyer Icon */}
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {comment.buyer?.nickname || "Unknown User"}
+                        </p>
+                        <span className="text-xs text-gray-500">{new Date(comment.date).toLocaleString()}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 mt-1">{comment.message}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No comments</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

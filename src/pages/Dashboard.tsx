@@ -14,8 +14,6 @@ export default function Dashboard() {
 
     const vendorId = localStorage.getItem("vendorId");
 
-    console.log(vendorId)
-
     useEffect(() => {
         fetchSalesData();
         fetchDeliveredOrders();
