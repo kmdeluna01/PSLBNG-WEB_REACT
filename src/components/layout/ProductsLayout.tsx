@@ -15,6 +15,7 @@ import { ScrollArea } from '@radix-ui/react-scroll-area';
 import { Card, CardContent } from '@mui/material';
 import { format } from "date-fns";
 import MerchantDetails from '@/pages/Profile';
+import { Link } from "react-router-dom";
 
 const baseURL = import.meta.env.VITE_API_URL || "api";
 
@@ -109,31 +110,36 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
                     )}
                   </span>
                 </DropdownMenuTrigger>
-                
+
                 <DropdownMenuContent align="end" className="w-full p-2 shadow-lg bg-white rounded-lg">
                   <h3 className="text-sm font-semibold text-gray-700 px-2 py-1">Notifications</h3>
                   <ScrollArea className="max-h-[75vh] overflow-y-auto"> {/* Ensure scrolling works */}
                     {merchantDetails.notifications.length > 0 ? (
                       merchantDetails.notifications
-                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                      .map((notification, index) => (
-                        <DropdownMenuItem key={notification.id || index} className="p-2">
-                          <Card className={`w-full ${notification.read ? "bg-gray-100" : ""} rounded-md`}>
-                            <CardContent className="p-3">
-                              <div className="flex flex-col justify-between items-start">
-                                <p className="text-sm text-gray-800">{notification.message}</p>
-                                <span className="text-xs text-gray-500">{format(new Date(notification.date), "MMM dd, yyyy • hh:mm a")}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </DropdownMenuItem>
-                      ))
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .map((notification, index) => (
+                          <Link key={notification.id || index} to="/merchant/orders">
+                            <DropdownMenuItem className="p-2 cursor-pointer">
+                              <Card className={`w-full rounded-md ${!notification.read ? "bg-gray-200" : "bg-white"}`}>
+                                <CardContent className="p-3">
+                                  <div className="flex flex-col justify-between items-start">
+                                    <p className="text-sm text-gray-800">{notification.message}</p>
+                                    <span className="text-xs text-gray-500">
+                                      {format(new Date(notification.date), "MMM dd, yyyy • hh:mm a")}
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </DropdownMenuItem>
+                          </Link>
+                        ))
                     ) : (
                       <DropdownMenuItem disabled className="text-center text-gray-500">
                         No notifications
                       </DropdownMenuItem>
                     )}
                   </ScrollArea>
+
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
