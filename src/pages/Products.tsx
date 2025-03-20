@@ -202,14 +202,14 @@ export default function Products() {
       {/* Comments Modal */}
       {isCommentsModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-3/6 max-h-5/6">
             <div className="flex justify-between items-center border-b pb-2">
               <h3 className="text-xl font-semibold">Comments</h3>
               <button onClick={closeCommentsModal}>
                 <X className="w-5 h-5 text-gray-600 hover:text-gray-800" />
               </button>
             </div>
-            <div className="mt-4 max-h-60 overflow-y-auto">
+            <div className="mt-4 max-h-screen overflow-y-auto">
               {selectedComments.length > 0 ? (
                 selectedComments.map((comment, index) => (
                   <div key={index} className="flex items-start space-x-3 p-3 border-b border-gray-200">
