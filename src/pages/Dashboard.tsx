@@ -1,29 +1,69 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import axios from "axios";
-import { View } from "lucide-react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import L from "leaflet"; // Import Leaflet for heatmap
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Import leaflet-heat for the heatmap layer
+import "leaflet.heat";
 
 const baseURL = import.meta.env.VITE_API_URL || "";
 
 export default function Dashboard() {
-    const [monthlyRevenue, setMonthlyeRevenue] = useState([]);
+    const [monthlyRevenue, setMonthlyRevenue] = useState([]);
     const [deliveredOrders, setDeliveredOrders] = useState([]);
     const [canceledOrders, setCanceledOrders] = useState([]);
     const [activeTab, setActiveTab] = useState("delivered");
+    const [location, setLocation] = useState(null);
+    const [heatMapData, setHeatMapData] = useState([]);
+    const [addresses, setAddresses] = useState([]);
+    const [townData, setTownData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    //console.log(addresses)
 
     const vendorId = localStorage.getItem("vendorId");
 
     useEffect(() => {
         fetchSalesData();
         fetchDeliveredOrders();
+        getUserDetails();
     }, [vendorId]);
+
+    useEffect(() => {
+        if (deliveredOrders.length > 0) {
+            fetchGeolocationData();
+        }
+    }, [deliveredOrders]);
+
+    const getRandomColor = () => {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    };
+
+    const getUserDetails = async () => {
+        if (vendorId) {
+            try {
+                const res = await axios.get(`${baseURL}/profile/merchant/${vendorId}`);
+                const profileDetails = res.data.data;
+                setLocation(profileDetails.location);
+            } catch (error) {
+                console.error("Error fetching user data: ", error);
+            }
+        }
+    };
 
     const fetchSalesData = async () => {
         try {
             const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`);
             const { monthlyRevenue } = res.data;
-            setMonthlyeRevenue(monthlyRevenue);
+            setMonthlyRevenue(monthlyRevenue);
         } catch (error) {
             console.error("Error fetching sales data: ", error);
         }
@@ -34,11 +74,59 @@ export default function Dashboard() {
             const res = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
             const deliveredOrders = res.data.filter(order => order.status === "delivered");
             const canceledOrders = res.data.filter(order => order.status === "canceled");
+            const geocodedAddresses = deliveredOrders.map(order => order.userId.addressGeocoded);
+
+            const newHeatmapData = deliveredOrders
+                .map(order => ({
+                    lat: order.userId?.address.latitude,
+                    lng: order.userId?.address.longitude
+                }))
+                .filter(location => location.lat && location.lng);
+
+            setAddresses(geocodedAddresses);
+            setHeatMapData(newHeatmapData);
             setDeliveredOrders(deliveredOrders);
-            setCanceledOrders(canceledOrders)
+            setCanceledOrders(canceledOrders);
         } catch (error) {
             console.error("Error fetching delivered orders: ", error);
         }
+    };
+
+    const fetchGeolocationData = async () => {
+        setTownData(getTownDistribution(addresses));
+        setLoading(false);
+    };
+
+    const HeatmapLayer = ({ data }) => {
+        const map = useMap();
+
+        useEffect(() => {
+            if (!map) return;
+
+            const heatLayer = L.heatLayer(
+                data.map(({ lat, lng }) => [lat, lng]),
+                { radius: 20, blur: 15, maxZoom: 10 }
+            ).addTo(map);
+
+            return () => {
+                map.removeLayer(heatLayer); // Cleanup heatmap when component unmounts
+            };
+        }, [map, data]);
+
+        return null;
+    };
+
+    const getTownDistribution = (addresses) => {
+        if (!addresses || addresses.length === 0) {
+            return [];
+        }
+        const townCounts = addresses.reduce((acc, town) => {
+            if (town && town !== "Unknown") {
+                acc[town] = (acc[town] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        return Object.entries(townCounts).map(([town, count]) => ({ town, count }));
     };
 
     return (
@@ -48,30 +136,82 @@ export default function Dashboard() {
             </div>
             {/* Monthly Sales Graph */}
             <div className="space-y-8">
-                <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-gray-700">Monthly Sales 2025</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            {monthlyRevenue.length > 0 ? (
-                                <LineChart data={monthlyRevenue}>
-                                    <XAxis dataKey="month" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Line type="monotone" dataKey="totalRevenue" stroke="#4F46E5" strokeWidth={2} />
-                                </LineChart>
-                            ) : (
-                                <div style={{ justifyContent: 'center', alignItems: 'center', height: "100%" }}>
-                                    <p style={{ fontSize: 16, color: "#999", textAlign: "center" }}>No sales data available</p>
-                                </div>
-                            )}
-                        </ResponsiveContainer>
+                {/* Monthly Sales Chart Card */}
+                <div className="flex space-x-8">
+                    <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-gray-700">Monthly Sales 2025</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="w-full">
+                                <ResponsiveContainer width="100%" height={300}>
+                                    {monthlyRevenue.length > 0 ? (
+                                        <LineChart data={monthlyRevenue}>
+                                            <XAxis dataKey="month" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Line type="monotone" dataKey="totalRevenue" stroke="#4F46E5" strokeWidth={2} />
+                                        </LineChart>
+                                    ) : (
+                                        <div style={{ justifyContent: 'center', alignItems: 'center', height: "100%" }}>
+                                            <p style={{ fontSize: 16, color: "#999", textAlign: "center" }}>No sales data available</p>
+                                        </div>
+                                    )}
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    </CardContent>
-                </Card>
+                    {/* Address Pie Chart Card */}
+                    <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-gray-700">Buyer Distribution by Town</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="w-full">
+                                {loading ? (
+                                    <div className="flex justify-center items-center h-72">
+                                        <Skeleton className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
+                                    </div>
+                                ) : townData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={townData}
+                                                dataKey="count"
+                                                nameKey="town"
+                                                cx="50%"
+                                                cy="50%"
+                                                outerRadius="90%"
+                                            >
+                                                {townData.map((_, index) => (
+                                                    <Cell key={`cell-${index}`} fill={getRandomColor()} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                            <Legend
+                                                layout="horizontal"
+                                                align="center"
+                                                verticalAlign="bottom"
+                                                iconType="circle"
+                                                wrapperStyle={{
+                                                    paddingTop: "10px",
+                                                    fontSize: "14px",
+                                                    color: "#333"
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <p className="text-center text-gray-500">Getting data...</p>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                {/* Orders History Table */}
+                </div>
+
+                {/* Orders History Table Card */}
                 <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                     <CardHeader>
                         <CardTitle className="text-lg text-gray-700">Orders History</CardTitle>
@@ -91,45 +231,69 @@ export default function Dashboard() {
                             >
                                 Canceled Orders
                             </button>
+                            {/* New Heatmap Tab */}
+                            <button
+                                className={`px-4 py-2 text-sm font-semibold ${activeTab === "heatmap" ? "border-b-2 border-green-500 text-green-600" : "text-gray-500"}`}
+                                onClick={() => setActiveTab("heatmap")}
+                            >
+                                Heatmap
+                            </button>
                         </div>
 
                         {/* Orders Table */}
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full border-collapse border border-gray-200">
-                                <thead>
-                                    <tr className="bg-gray-100">
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Order #</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Total</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Mode of Payment</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Customer Email</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Customer Number</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {(activeTab === "delivered" ? deliveredOrders : canceledOrders).length > 0 ? (
-                                        (activeTab === "delivered" ? deliveredOrders : canceledOrders).map(order => (
-                                            <tr key={order._id} className="hover:bg-gray-50">
-                                                <td className="border border-gray-300 px-4 py-2">{order.orderNum}</td>
-                                                <td className="border border-gray-300 px-4 py-2">₱{order.items.reduce((total, item) => total + (item.product_id?.price || 0) * item.quantity, 0)}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{order.paymentMode}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{order.userId?.email || "N/A"}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{order.userId?.number || "N/A"}</td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className="border border-gray-300 px-4 py-2 text-center text-gray-500">
-                                                No {activeTab} orders found.
-                                            </td>
+                        {/* Orders Table */}
+                        <div className="overflow-x-auto max-h-96">
+                            {activeTab !== "heatmap" ? (
+                                <table className="min-w-full border-collapse border border-gray-200">
+                                    <thead>
+                                        <tr className="bg-gray-100">
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Order #</th>
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Total</th>
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Mode of Payment</th>
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Customer Email</th>
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Customer Number</th>
+                                            <th className="border border-gray-300 px-4 py-2 text-left">Address</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {(activeTab === "delivered" ? deliveredOrders : canceledOrders).length > 0 ? (
+                                            (activeTab === "delivered" ? deliveredOrders : canceledOrders).map((order) => (
+                                                <tr key={order._id} className="hover:bg-gray-50">
+                                                    <td className="border border-gray-300 px-4 py-2">{order.orderNum}</td>
+                                                    <td className="border border-gray-300 px-4 py-2">
+                                                        ₱{order.items.reduce((total, item) => total + (item.product_id?.price || 0) * item.quantity, 0)}
+                                                    </td>
+                                                    <td className="border border-gray-300 px-4 py-2">{order.paymentMode}</td>
+                                                    <td className="border border-gray-300 px-4 py-2">{order.userId?.email || "N/A"}</td>
+                                                    <td className="border border-gray-300 px-4 py-2">{order.userId?.number || "N/A"}</td>
+                                                    <td className="border border-gray-300 px-4 py-2">{order.userId?.addressGeocoded || "N/A"}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6} className="border border-gray-300 px-4 py-4 text-center text-gray-500">
+                                                    No {activeTab} orders found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+
+                                </table>
+                            ) : (
+                                <div className="h-96 relative">
+                                    <MapContainer center={[location.latitude, location.longitude]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        />
+                                        <HeatmapLayer data={heatMapData} />
+                                    </MapContainer>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             </div>
-
         </div>
     );
 }
