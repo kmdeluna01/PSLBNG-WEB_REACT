@@ -211,7 +211,7 @@ const PendingOrder = () => {
 
                     ) : selectedTab === 'canceled' && orders.length > 0 ? (
                         orders
-                            .filter(order => order.status === 'canceled')
+                            .filter(order => order.status === 'cancelled')
                             .map(order => (
                                 <div key={order._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
                                     <div className="flex justify-between items-center">
