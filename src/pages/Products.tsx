@@ -168,12 +168,12 @@ export default function Products() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    openCommentsModal(product.comments);
+                    openCommentsModal(product.ratings?.reviews);
                   }}
                   className="flex py-2 text-gray-600 hover:text-gray-800"
                 >
                   <MessageSquareText className="w-5 h-5 cursor-pointer" />
-                  <span className="ml-2 text-sm">{product.comments?.length || 0}</span>
+                  <span className="ml-2 text-sm">{product.ratings?.reviews?.length || 0}</span>
                 </button>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function Products() {
                         </p>
                         <span className="text-xs text-gray-500">{new Date(comment.date).toLocaleString()}</span>
                       </div>
-                      <p className="text-sm text-gray-700 mt-1">{comment.message}</p>
+                      <p className="text-sm text-gray-700 mt-1">{comment.comments}</p>
                     </div>
                   </div>
                 ))
