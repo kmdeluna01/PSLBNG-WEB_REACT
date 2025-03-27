@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, MessageSquareText, X, CircleUserRound } from "lucide-react";
+import { Star, Plus, MessageSquareText, X, CircleUserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import UploadProduct from "@/components/UploadProduct";
 import axios from "axios";
@@ -149,9 +149,27 @@ export default function Products() {
 
               {/* Card Header */}
               <div className="p-4 text-left">
-                <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
-                  {product.productName}
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
+                    {product.productName}
+                  </h3>
+                  <div className="p-4 text-left flex items-center">
+                    {[...Array(5)].map((_, index) => (
+                      <Star
+                        key={index}
+                        className={`w-4 h-4 ${index < Math.floor(product.ratings?.average)
+                          ? "text-yellow-500 fill-yellow-500"
+                          : index < product.ratings?.average
+                            ? "text-yellow-300 fill-yellow-300"
+                            : "text-gray-300"
+                          }`}
+                      />
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600">
+                      ({product.ratings?.totalRatings || 0})
+                    </span>
+                  </div>
+                </div>
                 <p className="text-vendor-600 font-medium">
                   ₱{product.price ? product.price.toLocaleString() : "N/A"}
                 </p>
