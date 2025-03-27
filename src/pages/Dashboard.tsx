@@ -5,6 +5,7 @@ import axios from "axios";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet"; // Import Leaflet for heatmap
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 // Import leaflet-heat for the heatmap layer
 import "leaflet.heat";
@@ -23,11 +24,16 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(null);
     const [selectedMonthData, setSelectedMonthData] = useState(null);
+    const [showAllTowns, setShowAllTowns] = useState(false);
+
+    // Determine which data to display
+    const chartData = showAllTowns ? townData : selectedMonthData;
+    const dataKey = showAllTowns ? "count" : "totalRevenue";
 
     const vendorId = localStorage.getItem("vendorId");
 
     //console.log("Monthly Revenue: ", monthlyRevenue)
-    console.log("Selected Town: ", selectedMonth)
+    console.log("Selected Town: ", townData)
     //console.log("Selected Month Data: ", selectedMonthData)
 
     useEffect(() => {
@@ -45,13 +51,13 @@ export default function Dashboard() {
     useEffect(() => {
         if (selectedMonth) {
             const monthData = getMonthDistribution(deliveredOrders);
-            setSelectedMonthData(monthData[selectedMonth] 
-                ? Object.entries(monthData[selectedMonth]).map(([town, totalRevenue]) => ({ town, totalRevenue })) 
+            setSelectedMonthData(monthData[selectedMonth]
+                ? Object.entries(monthData[selectedMonth]).map(([town, totalRevenue]) => ({ town, totalRevenue }))
                 : []
             );
         }
     }, [selectedMonth, deliveredOrders]);
-    
+
 
     const handleLineChartClick = (data) => {
         if (data && data.activeLabel) {
@@ -155,29 +161,29 @@ export default function Dashboard() {
         if (!orders || orders.length === 0) {
             return {};
         }
-    
+
         const monthlyData = orders.reduce((acc, order) => {
             if (!order.createdAt || !order.userId?.addressGeocoded) return acc;
-    
+
             const date = new Date(order.createdAt);
             const month = date.toLocaleString("en-US", { month: "long" });
             const town = order.userId.addressGeocoded;
-    
+
             const totalRevenue = order.items.reduce((sum, item) => {
                 return sum + (item.product_id?.price || 0) * item.quantity;
             }, 0);
-    
+
             if (!acc[month]) acc[month] = {};
             if (!acc[month][town]) acc[month][town] = 0;
-    
+
             acc[month][town] += totalRevenue;
-    
+
             return acc;
         }, {});
-    
+
         return monthlyData;
     };
-    
+
 
 
     return (
@@ -222,28 +228,39 @@ export default function Dashboard() {
                     {/* Buyer Distribution Pie Chart */}
                     <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                         <CardHeader>
-                            <CardTitle className="text-lg text-gray-700">
-                                {selectedMonth ? `Buyer Distribution for ${selectedMonth}` : "Buyer Distribution by Town"}
+                            <CardTitle className="flex justify-between text-lg text-gray-700">
+                                {showAllTowns
+                                    ? "Buyer Distribution for All Towns"
+                                    : selectedMonth
+                                        ? `Revenue Distribution for ${selectedMonth}`
+                                        : "Buyer Distribution by Town"}
+
+                                <Button
+                                    onClick={() => setShowAllTowns((prev) => !prev)}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+                                >
+                                    {showAllTowns ? "View Selected Month" : "See All Town"}
+                                </Button>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="w-full">
                                 {loading ? (
                                     <div className="flex justify-center items-center h-72">
-                                        <Skeleton className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
+                                        <div className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
                                     </div>
-                                ) : selectedMonthData && selectedMonthData.length > 0 ? (
+                                ) : chartData && chartData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={300}>
                                         <PieChart>
                                             <Pie
-                                                data={selectedMonthData} // Use correct nested array
-                                                dataKey="totalRevenue"
+                                                data={chartData}
+                                                dataKey={dataKey}
                                                 nameKey="town"
                                                 cx="50%"
                                                 cy="50%"
                                                 outerRadius="90%"
                                             >
-                                                {selectedMonthData.map((_, index) => (
+                                                {chartData.map((_, index) => (
                                                     <Cell key={`cell-${index}`} fill={getRandomColor()} />
                                                 ))}
                                             </Pie>
@@ -253,11 +270,10 @@ export default function Dashboard() {
                                     </ResponsiveContainer>
                                 ) : (
                                     <p className="text-center text-gray-500">
-                                        {selectedMonth ? "No data for this month" : "Select a month to view details"}
+                                        {showAllTowns ? "No data available" : selectedMonth ? "No data for this month" : "Select a month to view details"}
                                     </p>
                                 )}
                             </div>
-
                         </CardContent>
                     </Card>
                 </div>
