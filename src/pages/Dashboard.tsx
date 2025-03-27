@@ -21,10 +21,14 @@ export default function Dashboard() {
     const [addresses, setAddresses] = useState([]);
     const [townData, setTownData] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    //console.log(addresses)
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [selectedMonthData, setSelectedMonthData] = useState(null);
 
     const vendorId = localStorage.getItem("vendorId");
+
+    //console.log("Monthly Revenue: ", monthlyRevenue)
+    console.log("Selected Town: ", selectedMonth)
+    //console.log("Selected Month Data: ", selectedMonthData)
 
     useEffect(() => {
         fetchSalesData();
@@ -37,6 +41,23 @@ export default function Dashboard() {
             fetchGeolocationData();
         }
     }, [deliveredOrders]);
+
+    useEffect(() => {
+        if (selectedMonth) {
+            const monthData = getMonthDistribution(deliveredOrders);
+            setSelectedMonthData(monthData[selectedMonth] 
+                ? Object.entries(monthData[selectedMonth]).map(([town, totalRevenue]) => ({ town, totalRevenue })) 
+                : []
+            );
+        }
+    }, [selectedMonth, deliveredOrders]);
+    
+
+    const handleLineChartClick = (data) => {
+        if (data && data.activeLabel) {
+            setSelectedMonth(data.activeLabel);
+        }
+    };
 
     const getRandomColor = () => {
         const letters = '0123456789ABCDEF';
@@ -73,7 +94,7 @@ export default function Dashboard() {
         try {
             const res = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
             const deliveredOrders = res.data.filter(order => order.status === "delivered");
-            const canceledOrders = res.data.filter(order => order.status === "canceled");
+            const canceledOrders = res.data.filter(order => order.status === "cancelled");
             const geocodedAddresses = deliveredOrders.map(order => order.userId.addressGeocoded);
 
             const newHeatmapData = deliveredOrders
@@ -94,6 +115,7 @@ export default function Dashboard() {
 
     const fetchGeolocationData = async () => {
         setTownData(getTownDistribution(addresses));
+        setSelectedMonthData(getMonthDistribution(deliveredOrders) || []);
         setLoading(false);
     };
 
@@ -129,6 +151,35 @@ export default function Dashboard() {
         return Object.entries(townCounts).map(([town, count]) => ({ town, count }));
     };
 
+    const getMonthDistribution = (orders) => {
+        if (!orders || orders.length === 0) {
+            return {};
+        }
+    
+        const monthlyData = orders.reduce((acc, order) => {
+            if (!order.createdAt || !order.userId?.addressGeocoded) return acc;
+    
+            const date = new Date(order.createdAt);
+            const month = date.toLocaleString("en-US", { month: "long" });
+            const town = order.userId.addressGeocoded;
+    
+            const totalRevenue = order.items.reduce((sum, item) => {
+                return sum + (item.product_id?.price || 0) * item.quantity;
+            }, 0);
+    
+            if (!acc[month]) acc[month] = {};
+            if (!acc[month][town]) acc[month][town] = 0;
+    
+            acc[month][town] += totalRevenue;
+    
+            return acc;
+        }, {});
+    
+        return monthlyData;
+    };
+    
+
+
     return (
         <div className="min-h-screen">
             <div className="flex items-center mb-6">
@@ -138,6 +189,7 @@ export default function Dashboard() {
             <div className="space-y-8">
                 {/* Monthly Sales Chart Card */}
                 <div className="flex space-x-8">
+                    {/* Monthly Sales Line Chart */}
                     <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                         <CardHeader>
                             <CardTitle className="text-lg text-gray-700">Monthly Sales 2025</CardTitle>
@@ -146,15 +198,20 @@ export default function Dashboard() {
                             <div className="w-full">
                                 <ResponsiveContainer width="100%" height={300}>
                                     {monthlyRevenue.length > 0 ? (
-                                        <LineChart data={monthlyRevenue}>
-                                            <XAxis dataKey="month" />
+                                        <LineChart data={monthlyRevenue} onClick={handleLineChartClick}>
+                                            <XAxis dataKey="month" tickFormatter={(month) => month.substring(0, 3)} />
                                             <YAxis />
                                             <Tooltip />
-                                            <Line type="monotone" dataKey="totalRevenue" stroke="#4F46E5" strokeWidth={2} />
+                                            <Line
+                                                type="monotone"
+                                                dataKey="totalRevenue"
+                                                stroke="#4F46E5"
+                                                strokeWidth={2}
+                                            />
                                         </LineChart>
                                     ) : (
-                                        <div style={{ justifyContent: 'center', alignItems: 'center', height: "100%" }}>
-                                            <p style={{ fontSize: 16, color: "#999", textAlign: "center" }}>No sales data available</p>
+                                        <div className="flex justify-center items-center h-full">
+                                            <p className="text-center text-gray-500">No sales data available</p>
                                         </div>
                                     )}
                                 </ResponsiveContainer>
@@ -162,10 +219,12 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
-                    {/* Address Pie Chart Card */}
+                    {/* Buyer Distribution Pie Chart */}
                     <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                         <CardHeader>
-                            <CardTitle className="text-lg text-gray-700">Buyer Distribution by Town</CardTitle>
+                            <CardTitle className="text-lg text-gray-700">
+                                {selectedMonth ? `Buyer Distribution for ${selectedMonth}` : "Buyer Distribution by Town"}
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="w-full">
@@ -173,42 +232,34 @@ export default function Dashboard() {
                                     <div className="flex justify-center items-center h-72">
                                         <Skeleton className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
                                     </div>
-                                ) : townData.length > 0 ? (
+                                ) : selectedMonthData && selectedMonthData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={300}>
                                         <PieChart>
                                             <Pie
-                                                data={townData}
-                                                dataKey="count"
+                                                data={selectedMonthData} // Use correct nested array
+                                                dataKey="totalRevenue"
                                                 nameKey="town"
                                                 cx="50%"
                                                 cy="50%"
                                                 outerRadius="90%"
                                             >
-                                                {townData.map((_, index) => (
+                                                {selectedMonthData.map((_, index) => (
                                                     <Cell key={`cell-${index}`} fill={getRandomColor()} />
                                                 ))}
                                             </Pie>
                                             <Tooltip />
-                                            <Legend
-                                                layout="horizontal"
-                                                align="center"
-                                                verticalAlign="bottom"
-                                                iconType="circle"
-                                                wrapperStyle={{
-                                                    paddingTop: "10px",
-                                                    fontSize: "14px",
-                                                    color: "#333"
-                                                }}
-                                            />
+                                            <Legend layout="horizontal" align="center" verticalAlign="bottom" />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <p className="text-center text-gray-500">Getting data...</p>
+                                    <p className="text-center text-gray-500">
+                                        {selectedMonth ? "No data for this month" : "Select a month to view details"}
+                                    </p>
                                 )}
                             </div>
+
                         </CardContent>
                     </Card>
-
                 </div>
 
                 {/* Orders History Table Card */}
@@ -240,7 +291,6 @@ export default function Dashboard() {
                             </button>
                         </div>
 
-                        {/* Orders Table */}
                         {/* Orders Table */}
                         <div className="overflow-x-auto max-h-96">
                             {activeTab !== "heatmap" ? (
