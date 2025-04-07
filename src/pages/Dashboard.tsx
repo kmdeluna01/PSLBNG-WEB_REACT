@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet"; // Import Leaflet for heatmap
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import React, { useMemo } from "react";
 
 // Import leaflet-heat for the heatmap layer
 import "leaflet.heat";
@@ -73,6 +74,17 @@ export default function Dashboard() {
         }
         return color;
     };
+
+    const colors = useMemo(() => {
+        if (!Array.isArray(chartData)) return {};
+
+        const colorMap: Record<string, string> = {};
+        chartData.forEach((item) => {
+            colorMap[item.town] = getRandomColor();
+        });
+        return colorMap;
+    }, [chartData]);
+
 
     const getUserDetails = async () => {
         if (vendorId) {
@@ -260,8 +272,11 @@ export default function Dashboard() {
                                                 cy="50%"
                                                 outerRadius="90%"
                                             >
-                                                {chartData.map((_, index) => (
-                                                    <Cell key={`cell-${index}`} fill={getRandomColor()} />
+                                                {chartData.map((entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={colors[entry.town] || "#ccc"}
+                                                    />
                                                 ))}
                                             </Pie>
                                             <Tooltip />

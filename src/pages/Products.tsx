@@ -149,11 +149,11 @@ export default function Products() {
 
               {/* Card Header */}
               <div className="p-4 text-left">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-row items-center justify-between">
                   <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
                     {product.productName}
                   </h3>
-                  <div className="p-4 text-left flex items-center">
+                  <div className="text-left flex items-center">
                     {[...Array(5)].map((_, index) => (
                       <Star
                         key={index}
@@ -170,9 +170,14 @@ export default function Products() {
                     </span>
                   </div>
                 </div>
-                <p className="text-vendor-600 font-medium">
-                  ₱{product.price ? product.price.toLocaleString() : "N/A"}
-                </p>
+
+                <div className="flex flex-row justify-between">
+                  <p className="text-vendor-600 font-medium">
+                    ₱{product.price ? product.price.toLocaleString() : "N/A"}
+                  </p>
+                  <p className="text-sm text-vendor-500">{product.sold} Sold</p>
+                </div>
+
                 <p className="text-sm text-vendor-500">Stock: {product.quantity}</p>
               </div>
 
