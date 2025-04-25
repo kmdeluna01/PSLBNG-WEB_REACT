@@ -1,102 +1,111 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { products } from "@/services/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Star, Plus, MessageSquareText, X, CircleUserRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import UploadProduct from "@/components/UploadProduct";
-import axios from "axios";
+import { useEffect, useState } from "react"; // Importing React hooks
+import { useQuery } from "@tanstack/react-query"; // Importing React Query hook for fetching data
+import { products } from "@/services/api"; // Importing the API service for product data
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Importing UI components for card styling
+import { Skeleton } from "@/components/ui/skeleton"; // Importing Skeleton component for loading state
+import { useToast } from "@/hooks/use-toast"; // Importing custom hook for showing toasts
+import { Button } from "@/components/ui/button"; // Importing Button component
+import { Star, Plus, MessageSquareText, X, CircleUserRound } from "lucide-react"; // Importing icons
+import { useNavigate } from "react-router-dom"; // Importing React Router's useNavigate hook for navigation
+import UploadProduct from "@/components/UploadProduct"; // Importing UploadProduct component
+import axios from "axios"; // Importing axios for making API requests
 
-const baseURL = import.meta.env.VITE_API_URL || "";
+const baseURL = import.meta.env.VITE_API_URL || ""; // Setting the base API URL from environment variables
 
 export default function Products() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const vendorId = localStorage.getItem("vendorId");
-  const [userProducts, setUserProducts] = useState([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedComments, setSelectedComments] = useState([]);
-  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  // State hooks for managing various parts of the component's state
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // For controlling dialog visibility
+  const { toast } = useToast(); // For showing toast notifications
+  const navigate = useNavigate(); // For navigating between pages
+  const vendorId = localStorage.getItem("vendorId"); // Getting vendor ID from local storage
+  const [userProducts, setUserProducts] = useState([]); // Storing the list of user products
+  const [isRefreshing, setIsRefreshing] = useState(false); // For managing refresh state
+  const [selectedComments, setSelectedComments] = useState([]); // For managing selected comments
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false); // For managing comments modal state
 
-  //console.log("User Products:", userProducts)
-
+  // Effect to ensure user is logged in, redirects to home if not
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token"); // Check for token in local storage
     if (!token) {
-      navigate("/");
+      navigate("/"); // Redirect to home if no token found
     }
-  }, [navigate]);
+  }, [navigate]); // Effect triggers on navigate change
 
+  // Fetching vendor products using React Query's useQuery hook
   const { data: productData, isLoading, error } = useQuery({
-    queryKey: ["products", vendorId],
-    queryFn: () => products.getVendorProducts(vendorId!),
-    enabled: !!vendorId,
+    queryKey: ["products", vendorId], // Query key for cache management
+    queryFn: () => products.getVendorProducts(vendorId!), // API call to fetch products
+    enabled: !!vendorId, // Only run the query if vendorId exists
   });
 
+  // Effect to show error toast if fetching products fails
   useEffect(() => {
     if (error) {
       toast({
         title: "Error",
         description: "Failed to fetch products",
-        variant: "destructive",
+        variant: "destructive", // Toast variant for errors
       });
     }
-  }, [error, toast]);
+  }, [error, toast]); // Trigger the effect when error changes
 
+  // Function to get user products from API
   const getUserProducts = async () => {
-    setIsRefreshing(true);
+    setIsRefreshing(true); // Set refreshing state to true
     if (vendorId) {
       try {
-        const res = await axios.get(`${baseURL}/merchant/${vendorId}/get-products`);
+        const res = await axios.get(`${baseURL}/merchant/${vendorId}/get-products`); // API call to fetch products
         if (res.data.data && Array.isArray(res.data.data)) {
-          fetchProductDetails(res.data.data);
+          fetchProductDetails(res.data.data); // Fetch product details if data is an array
         } else {
-          console.error("Products data is not an array:", res.data.data);
+          console.error("Products data is not an array:", res.data.data); // Log error if data is not an array
         }
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error); // Log error if API request fails
       }
     }
-    setIsRefreshing(false);
+    setIsRefreshing(false); // Set refreshing state to false
   };
 
+  // Function to fetch detailed information about each product
   const fetchProductDetails = async (productIds) => {
     try {
       const productRequests = productIds.map((productId) =>
-        axios.get(`${baseURL}/product-details/${productId}`)
+        axios.get(`${baseURL}/product-details/${productId}`) // Fetch each product's details
       );
-      const responses = await Promise.all(productRequests);
-      const products = responses.map((response) => response.data.data);
-      setUserProducts(products);
+      const responses = await Promise.all(productRequests); // Wait for all product requests to complete
+      const products = responses.map((response) => response.data.data); // Extract product data
+      setUserProducts(products); // Set user products in state
     } catch (error) {
-      console.error("Error fetching product details: ", error);
+      console.error("Error fetching product details: ", error); // Log error if fetching details fails
     }
   };
 
+  // Fetch user products when component mounts
   useEffect(() => {
     getUserProducts();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
+  // Function to open the product upload dialog
   const handleAddProduct = () => {
-    setIsDialogOpen(true);
+    setIsDialogOpen(true); // Open dialog to add product
   };
 
+  // Function to open the comments modal
   const openCommentsModal = (comments) => {
-    setSelectedComments(comments || []);
-    setIsCommentsModalOpen(true);
+    setSelectedComments(comments || []); // Set the selected comments
+    setIsCommentsModalOpen(true); // Open the comments modal
   };
 
+  // Function to close the comments modal
   const closeCommentsModal = () => {
-    setIsCommentsModalOpen(false);
-    setSelectedComments([]);
+    setIsCommentsModalOpen(false); // Close the comments modal
+    setSelectedComments([]); // Clear selected comments
   };
 
+  // Function to render content based on loading, error, or empty state
   const renderContent = () => {
-    if (isLoading || isRefreshing) {
+    if (isLoading || isRefreshing) { // Loading state
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, index) => (
@@ -112,7 +121,7 @@ export default function Products() {
       );
     }
 
-    if (!userProducts || userProducts.length === 0) {
+    if (!userProducts || userProducts.length === 0) { // No products state
       return (
         <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
           <Card className="w-full max-w-md">
@@ -127,13 +136,14 @@ export default function Products() {
       );
     }
 
+    // Products available state
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 py-4">
         {userProducts.map((product) => (
           <div
             key={product._id}
             className="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full cursor-pointer"
-            onClick={() => navigate(`/products/${product._id}/edit`)}
+            onClick={() => navigate(`/products/${product._id}/edit`)} // Navigate to product edit page
           >
             <div className="relative rounded-lg">
               {/* Image Section */}
@@ -191,7 +201,7 @@ export default function Products() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    openCommentsModal(product.ratings?.reviews);
+                    openCommentsModal(product.ratings?.reviews); // Open comments for the product
                   }}
                   className="flex py-2 text-gray-600 hover:text-gray-800"
                 >
@@ -215,7 +225,7 @@ export default function Products() {
           Add Product
         </Button>
       </div>
-      {renderContent()}
+      {renderContent()} {/* Render content based on loading or available products */}
       <UploadProduct
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}

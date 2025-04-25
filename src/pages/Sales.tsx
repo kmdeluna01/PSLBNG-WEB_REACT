@@ -4,9 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 
+// Set the base URL for API requests from environment variables
 const baseURL = import.meta.env.VITE_API_URL || "";
 
+// The SalesDashboard component is the main component for displaying sales data
 export default function SalesDashboard() {
+  // Use state to store the vendor ID, total sales, top products, etc.
   const [vendorId, setVendorId] = useState(localStorage.getItem("vendorId") || "");
   const [totalSales, setTotalSales] = useState(0);
   const [topProducts, setTopProducts] = useState([]);
@@ -14,45 +17,50 @@ export default function SalesDashboard() {
   const [revenue, setRevenue] = useState(0);
   const [profit, setProfit] = useState(0);
   const [deliveredOrders, setDeliveredOrders] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal for delivered orders
+  const [loading, setLoading] = useState(true);  // Loading state for the data fetching
+  const { toast } = useToast();  // Toast hook for notifications
 
+  // Effect hook to fetch sales data and delivered orders whenever the vendor ID changes
   useEffect(() => {
     if (vendorId) {
-      fetchSalesData();
-      fetchDeliveredOrders();
+      fetchSalesData();  // Fetch sales data from the API
+      fetchDeliveredOrders();  // Fetch delivered orders
     }
   }, [vendorId]);
 
+  // Function to fetch sales data from the API
   const fetchSalesData = async () => {
-    setLoading(true);
+    setLoading(true);  // Set loading to true before fetching
     try {
-      const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`);
+      const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`);  // API request
       const { totalSales, topProducts, lowStock, revenue, profit } = res.data;
 
+      // Update the state with the fetched data
       setTotalSales(totalSales || 0);
       setTopProducts(topProducts || []);
       setLowStockAlerts(lowStock || []);
       setRevenue(revenue || 0);
       setProfit(profit || 0);
     } catch (error) {
-      console.error("Error fetching sales data:", error);
+      console.error("Error fetching sales data:", error);  // Handle any errors
     } finally {
-      setLoading(false);
+      setLoading(false);  // Set loading to false once data is fetched
     }
   };
 
+  // Function to fetch delivered orders from the API
   const fetchDeliveredOrders = async () => {
     try {
       const response = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
-      const orders = response.data.filter(order => order.status === "delivered");
-      setDeliveredOrders(orders);
+      const orders = response.data.filter(order => order.status === "delivered");  // Filter delivered orders
+      setDeliveredOrders(orders);  // Update state with delivered orders
     } catch (error) {
-      console.error("Error fetching delivered orders:", error.response?.data || error.message);
+      console.error("Error fetching delivered orders:", error.response?.data || error.message);  // Handle errors
     }
   };
 
+  // Memoized function to sort top products by the number of items sold in descending order
   const sortedTopProducts = useMemo(() => {
     return [...topProducts].sort((a, b) => b.sold - a.sold);
   }, [topProducts]);

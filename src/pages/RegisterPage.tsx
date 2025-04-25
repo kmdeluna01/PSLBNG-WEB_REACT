@@ -1,151 +1,163 @@
-// RegisterPage.js
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import axios from "axios";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import logo from "../assets/logo.png";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import L from "leaflet";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+// Import necessary libraries and components
+import { useState, useEffect } from "react"; // Hooks for state management and side effects
+import { Button } from "@/components/ui/button"; // Custom Button component
+import { Input } from "@/components/ui/input"; // Custom Input component
+import { Label } from "@/components/ui/label"; // Custom Label component
+import { useNavigate } from "react-router-dom"; // For navigation between routes
+import { toast } from "@/hooks/use-toast"; // Custom toast notifications
+import axios from "axios"; // HTTP client to make API requests
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"; // For displaying maps with Leaflet
+import "leaflet/dist/leaflet.css"; // Leaflet CSS for map styling
+import logo from "../assets/logo.png"; // Import logo for the page
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"; // High-res marker icon for Retina displays
+import L from "leaflet"; // Leaflet library
+import markerIcon from "leaflet/dist/images/marker-icon.png"; // Regular marker icon
+import markerShadow from "leaflet/dist/images/marker-shadow.png"; // Marker shadow for the icon
 
+// Custom icon settings for map markers
 const customIcon = new L.Icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41], 
-  iconAnchor: [12, 41], 
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+  iconUrl: markerIcon, // URL of the marker icon
+  shadowUrl: markerShadow, // URL of the shadow for the marker
+  iconSize: [25, 41], // Size of the icon
+  iconAnchor: [12, 41], // Point where the icon is anchored
+  popupAnchor: [1, -34], // Popup position relative to the icon
+  shadowSize: [41, 41], // Size of the shadow
 });
 
-
+// Set default options for Leaflet's marker icons
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+  iconRetinaUrl: markerIcon2x, // High-res icon for retina displays
+  iconUrl: markerIcon, // Standard icon
+  shadowUrl: markerShadow, // Shadow for the icon
 });
 
+// Base URL for API requests
 const baseURL = import.meta.env.VITE_API_URL || "";
 
+// RegisterPage component for rendering the registration page
 const RegisterPage = () => {
-  const navigate = useNavigate();
-  const [location, setLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [activeButton, setActiveButton] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const navigate = useNavigate(); // Hook to handle navigation between routes
+  const [location, setLocation] = useState(null); // State for storing the user's location
+  const [isLoading, setIsLoading] = useState(false); // State to manage loading state
+  const [showModal, setShowModal] = useState(false); // State to control modal visibility
+  const [activeButton, setActiveButton] = useState(""); // State for active button tracking
+  const [emailError, setEmailError] = useState(""); // State for email validation error
+  const [phoneError, setPhoneError] = useState(""); // State for phone validation error
+  const [password, setPassword] = useState(""); // State for storing the password
+  const [passwordError, setPasswordError] = useState(""); // State for password mismatch error
 
+  // Handle password input change
   const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
+    setPassword(e.target.value); // Update password state
   };
 
+  // Handle password confirmation input change
   const handleVerifyPasswordChange = (e) => {
-
     if (password && e.target.value !== password) {
-      setPasswordError("Passwords do not match");
+      setPasswordError("Passwords do not match"); // Show error if passwords don't match
     } else {
-      setPasswordError("");
+      setPasswordError(""); // Clear error if passwords match
     }
   };
 
-
+  // Handle email input validation
   const handleEmailValidation = (e) => {
     const email = e.target.value;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Email regex
 
     if (!emailRegex.test(email)) {
-      setEmailError("Invalid email address (e.g., merchant@pslbng.com)");
+      setEmailError("Invalid email address (e.g., merchant@pslbng.com)"); // Set error message
     } else {
-      setEmailError("");
+      setEmailError(""); // Clear error if valid email
     }
   };
 
+  // Handle phone number input validation
   const handlePhoneValidation = (e) => {
     const phone = e.target.value;
     if (!/^09\d{9}$/.test(phone)) {
-      setPhoneError("Please follow the format (09XX XXXX XXX)");
+      setPhoneError("Please follow the format (09XX XXXX XXX)"); // Set error if phone is invalid
     } else {
-      setPhoneError("");
+      setPhoneError(""); // Clear error if valid
     }
   };
 
-
+  // Handle the action of using the current location
   const handleCurrentLocation = () => {
-      setActiveButton("current");
-      requestLocation();
+    setActiveButton("current"); // Set active button to 'current'
+    requestLocation(); // Request the current location
   };
 
+  // Handle the action of pinning a location on the map
   const handlePinLocation = () => {
-      setActiveButton("pin");
-      setShowModal(true);
+    setActiveButton("pin"); // Set active button to 'pin'
+    setShowModal(true); // Show the modal for location pinning
   };
 
-
+  // Request user's current location on page load
   useEffect(() => {
-    requestLocation();
+    requestLocation(); // Call the function to get the user's location
   }, []);
 
+  // Request the user's current geolocation using the browser API
   const requestLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            latitude: position.coords.latitude, // Store latitude
+            longitude: position.coords.longitude, // Store longitude
           });
         },
-        (error) => console.error("Error getting location:", error)
+        (error) => console.error("Error getting location:", error) // Handle location error
       );
     }
   };
 
+  // Handle map events, such as clicking to pin a location
   const MapEvents = () => {
     useMapEvents({
       click(e) {
-        setLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+        setLocation({ latitude: e.latlng.lat, longitude: e.latlng.lng }); // Update location on click
       },
     });
     return null;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
+    e.preventDefault(); // Prevent default form submission
+    setIsLoading(true); // Set loading state
+    const formData = new FormData(e.currentTarget); // Collect form data
 
     try {
-        const password = formData.get("registerPassword");
-        const verifyPassword = formData.get("verifyPassword");
-        
-        if (password !== verifyPassword) {
-            throw new Error("Passwords do not match");
-          }
+      const password = formData.get("registerPassword"); // Get the password
+      const verifyPassword = formData.get("verifyPassword"); // Get the confirmed password
+      
+      // Check if passwords match
+      if (password !== verifyPassword) {
+        throw new Error("Passwords do not match"); // Show error if passwords don't match
+      }
 
-        const registerData = {
-        name: formData.get("shopName"),
-        email: formData.get("registerEmail"),
-        number: formData.get("phoneNumber"),
-        location: { latitude: location?.latitude || 0, longitude: location?.longitude || 0 },
-        password: formData.get("registerPassword"),
+      const registerData = {
+        name: formData.get("shopName"), // Shop name
+        email: formData.get("registerEmail"), // Email address
+        number: formData.get("phoneNumber"), // Phone number
+        location: { latitude: location?.latitude || 0, longitude: location?.longitude || 0 }, // User's location
+        password: formData.get("registerPassword"), // Password
       };
 
+      // Send registration data to the backend
       await axios.post(`${baseURL}/merchant-register`, registerData);
-      toast({ title: "Success", description: "Account created successfully!" });
-      navigate("/");
+      toast({ title: "Success", description: "Account created successfully!" }); // Show success message
+      navigate("/"); // Navigate to home page
     } catch (error) {
-      toast({ title: "Error", description: error.response?.data?.message || "An error occurred", variant: "destructive" });
+      toast({ title: "Error", description: error.response?.data?.message || "An error occurred", variant: "destructive" }); // Show error message
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Reset loading state
     }
   };
+
 
   return (
     <div className="flex justify-center min-h-screen bg-gray-100 p-4">

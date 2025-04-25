@@ -3,74 +3,89 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 
+// Base URL for API requests, sourced from environment variables
 const baseURL = import.meta.env.VITE_API_URL || "";
 
+// SecuritySettings component definition
 const SecuritySettings = () => {
+    // navigate function for routing within the app
     const navigate = useNavigate();
-    const [showVerifyModal, setShowVerifyModal] = useState(false);
-    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-    const [password, setPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    
+    // useState hooks to manage component state
+    const [showVerifyModal, setShowVerifyModal] = useState(false); // Controls the visibility of the verify password modal
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false); // Controls visibility of change password modal
+    const [password, setPassword] = useState(''); // State for storing the current password input
+    const [newPassword, setNewPassword] = useState(''); // State for storing the new password input
+    const [isLoading, setIsLoading] = useState(false); // State for managing the loading state of the process
 
+    // Function to clear password input fields
     const clearInputs = () => {
-        setPassword('');
-        setNewPassword('');
+        setPassword(''); // Clear current password
+        setNewPassword(''); // Clear new password
     };
 
+    // Function to verify the current password entered by the user
     const verifyPassword = async () => {
-        setIsLoading(true);
-        const vendorId = localStorage.getItem('vendorId');
+        setIsLoading(true); // Set loading state to true to indicate a request is in progress
+        const vendorId = localStorage.getItem('vendorId'); // Get vendorId from local storage
 
         try {
+            // Send POST request to verify the password
             const response = await axios.post(`${baseURL}/merchant-profile/${vendorId}/verify-password`, {
                 password,
             });
 
             if (response.status === 200) {
-                toast({ title: "Success", description: "Password verified!" });
-                setShowVerifyModal(false);
-                setShowChangePasswordModal(true);
-                setPassword('');
+                toast({ title: "Success", description: "Password verified!" }); // Show success toast if password is correct
+                setShowVerifyModal(false); // Close the verify password modal
+                setShowChangePasswordModal(true); // Open the change password modal
+                setPassword(''); // Clear the current password input field
             }
         } catch (error) {
-            setPassword('');
+            setPassword(''); // Clear password field on error
             if (error.response && error.response.status === 400) {
+                // Show an error toast if password is incorrect
                 toast({ title: "Error", description: "Incorrect password. Please try again.", variant: "destructive" });
             } else {
+                // Show a generic error toast for any other error
                 toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
             }
         } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Set loading state to false when done
         }
     };
 
+    // Function to handle the change of password
     const handleChangePassword = async () => {
-        setIsLoading(true);
-        const vendorId = localStorage.getItem('vendorId');
+        setIsLoading(true); // Set loading state to true
+        const vendorId = localStorage.getItem('vendorId'); // Get vendorId from local storage
 
         try {
+            // Send POST request to change the password
             const response = await axios.post(`${baseURL}/merchant-profile/${vendorId}/change-password`, {
                 newPassword,
             });
 
             if (response.status === 200) {
-                toast({ title: "Success", description: "Password changed successfully!" });
-                setShowChangePasswordModal(false);
-                navigate("/merchant/security-settings");
-                clearInputs();
+                toast({ title: "Success", description: "Password changed successfully!" }); // Show success toast on success
+                setShowChangePasswordModal(false); // Close the change password modal
+                navigate("/merchant/security-settings"); // Redirect to the security settings page
+                clearInputs(); // Clear input fields
             }
         } catch (error) {
-            setNewPassword('');
+            setNewPassword(''); // Clear the new password field on error
             if (error.response && error.response.status === 400) {
+                // Show an error toast if the password change failed
                 toast({ title: "Error", description: "Failed to change password. Please try again.", variant: "destructive" });
             } else {
+                // Show a generic error toast for any other error
                 toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
             }
         } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Set loading state to false when done
         }
     };
+
 
     return (
         <div className="min-h-screen">

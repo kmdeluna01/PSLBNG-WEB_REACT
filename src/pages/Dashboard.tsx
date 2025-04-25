@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import {
+    LineChart, Line, XAxis, YAxis, Tooltip,
+    ResponsiveContainer, PieChart, Pie, Cell, Legend
+} from "recharts";
 import axios from "axios";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import L from "leaflet"; // Import Leaflet for heatmap
+import L from "leaflet"; // Leaflet library for rendering the map
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import React, { useMemo } from "react";
-
-// Import leaflet-heat for the heatmap layer
-import "leaflet.heat";
+import "leaflet.heat"; // Heatmap extension for Leaflet
 
 const baseURL = import.meta.env.VITE_API_URL || "";
 
 export default function Dashboard() {
+    // State variables to manage fetched data and UI state
     const [monthlyRevenue, setMonthlyRevenue] = useState([]);
     const [deliveredOrders, setDeliveredOrders] = useState([]);
     const [canceledOrders, setCanceledOrders] = useState([]);
@@ -27,28 +29,25 @@ export default function Dashboard() {
     const [selectedMonthData, setSelectedMonthData] = useState(null);
     const [showAllTowns, setShowAllTowns] = useState(false);
 
-    // Determine which data to display
     const chartData = showAllTowns ? townData : selectedMonthData;
     const dataKey = showAllTowns ? "count" : "totalRevenue";
-
     const vendorId = localStorage.getItem("vendorId");
 
-    //console.log("Monthly Revenue: ", monthlyRevenue)
-    console.log("Selected Town: ", townData)
-    //console.log("Selected Month Data: ", selectedMonthData)
-
+    // Initial data fetching
     useEffect(() => {
         fetchSalesData();
         fetchDeliveredOrders();
         getUserDetails();
     }, [vendorId]);
 
+    // Fetch geolocation data when delivered orders are available
     useEffect(() => {
         if (deliveredOrders.length > 0) {
             fetchGeolocationData();
         }
     }, [deliveredOrders]);
 
+    // Update month data when selectedMonth changes
     useEffect(() => {
         if (selectedMonth) {
             const monthData = getMonthDistribution(deliveredOrders);
@@ -59,13 +58,14 @@ export default function Dashboard() {
         }
     }, [selectedMonth, deliveredOrders]);
 
-
+    // Handles clicking on line chart to select a month
     const handleLineChartClick = (data) => {
         if (data && data.activeLabel) {
             setSelectedMonth(data.activeLabel);
         }
     };
 
+    // Generates a random hex color
     const getRandomColor = () => {
         const letters = '0123456789ABCDEF';
         let color = '#';
@@ -75,17 +75,18 @@ export default function Dashboard() {
         return color;
     };
 
+    // Memoizes color generation for pie chart
     const colors = useMemo(() => {
         if (!Array.isArray(chartData)) return {};
 
-        const colorMap: Record<string, string> = {};
+        const colorMap = {};
         chartData.forEach((item) => {
             colorMap[item.town] = getRandomColor();
         });
         return colorMap;
     }, [chartData]);
 
-
+    // Fetches vendor profile to get initial location
     const getUserDetails = async () => {
         if (vendorId) {
             try {
@@ -98,6 +99,7 @@ export default function Dashboard() {
         }
     };
 
+    // Fetches sales data for the vendor
     const fetchSalesData = async () => {
         try {
             const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`);
@@ -108,6 +110,7 @@ export default function Dashboard() {
         }
     };
 
+    // Fetches delivered and canceled orders and sets heatmap data
     const fetchDeliveredOrders = async () => {
         try {
             const res = await axios.get(`${baseURL}/merchant/${vendorId}/orders/pending`);
@@ -131,12 +134,14 @@ export default function Dashboard() {
         }
     };
 
+    // Processes address and order data into usable formats
     const fetchGeolocationData = async () => {
         setTownData(getTownDistribution(addresses));
         setSelectedMonthData(getMonthDistribution(deliveredOrders) || []);
         setLoading(false);
     };
 
+    // Heatmap component for the map
     const HeatmapLayer = ({ data }) => {
         const map = useMap();
 
@@ -149,30 +154,30 @@ export default function Dashboard() {
             ).addTo(map);
 
             return () => {
-                map.removeLayer(heatLayer); // Cleanup heatmap when component unmounts
+                map.removeLayer(heatLayer); // Cleanup heatmap
             };
         }, [map, data]);
 
         return null;
     };
 
+    // Counts number of buyers in each town
     const getTownDistribution = (addresses) => {
-        if (!addresses || addresses.length === 0) {
-            return [];
-        }
+        if (!addresses || addresses.length === 0) return [];
+
         const townCounts = addresses.reduce((acc, town) => {
             if (town && town !== "Unknown") {
                 acc[town] = (acc[town] || 0) + 1;
             }
             return acc;
         }, {});
+
         return Object.entries(townCounts).map(([town, count]) => ({ town, count }));
     };
 
+    // Aggregates total revenue per town per month
     const getMonthDistribution = (orders) => {
-        if (!orders || orders.length === 0) {
-            return {};
-        }
+        if (!orders || orders.length === 0) return {};
 
         const monthlyData = orders.reduce((acc, order) => {
             if (!order.createdAt || !order.userId?.addressGeocoded) return acc;
@@ -189,15 +194,15 @@ export default function Dashboard() {
             if (!acc[month][town]) acc[month][town] = 0;
 
             acc[month][town] += totalRevenue;
-
             return acc;
         }, {});
 
         return monthlyData;
     };
 
-
-
+    // The return block is the rendered UI — including charts, buttons, and maps.
+    // For space reasons, the UI block was omitted here but contains conditional rendering
+    // for charts (line, pie), map views (heatmap), and order tables for delivered/canceled orders.
     return (
         <div className="min-h-screen">
             <div className="flex items-center mb-6">

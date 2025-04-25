@@ -1,56 +1,66 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-const baseURL = import.meta.env.VITE_API_URL || '';
+// Import necessary hooks and functions
+import React, { useState, useEffect, useCallback } from 'react'; // React hooks for managing state and side effects
+import { useNavigate } from 'react-router-dom'; // Hook to navigate between pages
+import axios from 'axios'; // For making HTTP requests
+const baseURL = import.meta.env.VITE_API_URL || ''; // Get the base URL for the API from environment variables
 
 const PendingOrder = () => {
-    const [selectedTab, setSelectedTab] = useState('incoming');
-    const [orders, setOrders] = useState([]);
-    const [vendorPendings, setVendorPendings] = useState([]);
-    const navigate = useNavigate();
+    // Declare state variables to manage selected tab, orders, and pending items
+    const [selectedTab, setSelectedTab] = useState('incoming'); // Default tab is 'incoming'
+    const [orders, setOrders] = useState([]); // Store the list of orders
+    const [vendorPendings, setVendorPendings] = useState([]); // Store pending vendor product IDs
+    const navigate = useNavigate(); // To navigate between pages (e.g., after order status updates)
 
+    // useEffect hook runs once on initial component render
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        fetchOrders(); // Call the fetchOrders function to get the list of orders
+    }, []); // Empty dependency array ensures this runs only once
 
+    // Function to fetch orders from the server
     const fetchOrders = async () => {
-        const vendorID = localStorage.getItem("vendorId");
-        if (!vendorID) return;
+        const vendorID = localStorage.getItem("vendorId"); // Get vendor ID from local storage
+        if (!vendorID) return; // If there's no vendor ID, stop fetching orders
 
         try {
+            // Make a GET request to the server to fetch pending orders for the vendor
             const response = await axios.get(`${baseURL}/merchant/${vendorID}/orders/pending`);
-            //console.log(response)
-            const fetchedOrders = response.data;
-            setOrders(fetchedOrders);
+            const fetchedOrders = response.data; // Get orders data from the response
+            setOrders(fetchedOrders); // Set the fetched orders in state
+
+            // Extract product IDs from the orders to track pending items
             const productIds = fetchedOrders.flatMap(order => {
                 if (order.items && Array.isArray(order.items)) {
-                    return order.items.map(item => item.product_id);
+                    return order.items.map(item => item.product_id); // Extract product IDs from items
                 }
-                return [];  // Return an empty array if `order.items` is not defined or not an array
+                return []; // Return empty array if no items or invalid data
             });
-            setVendorPendings(productIds);
+            setVendorPendings(productIds); // Store the extracted product IDs in state
         } catch (error) {
-            console.error("Error fetching pending orders:", error);
+            console.error("Error fetching pending orders:", error); // Log error if the request fails
         }
     };
 
+    // Function to handle the 'Prepare' action for an order
     const handlePrepare = async (orderId) => {
-        if (!window.confirm("Start preparing this order?")) return;
+        if (!window.confirm("Start preparing this order?")) return; // Ask for confirmation before preparing the order
         try {
+            // Make a PUT request to update the order status to 'prepare'
             await axios.put(`${baseURL}/merchant/orders/${orderId}/prepare`);
-            fetchOrders();
+            fetchOrders(); // Refresh the list of orders after preparation
         } catch (error) {
-            console.error("Error preparing order:", error);
+            console.error("Error preparing order:", error); // Log error if the request fails
         }
     };
 
+    // Function to handle the 'Ship' action for an order
     const handleShip = async (orderId) => {
-        if (!window.confirm("Is the order ready to be shipped?")) return;
+        if (!window.confirm("Is the order ready to be shipped?")) return; // Ask for confirmation before shipping the order
         try {
+            // Make a PUT request to update the order status to 'ship'
             await axios.put(`${baseURL}/merchant/orders/${orderId}/ship`);
-            fetchOrders();
+            fetchOrders(); // Refresh the list of orders after shipping
         } catch (error) {
-            console.error("Error shipping:", error);
+            console.error("Error shipping:", error); // Log error if the request fails
         }
     };
 
