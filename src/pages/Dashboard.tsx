@@ -258,11 +258,45 @@ export default function Dashboard() {
                         <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                             <CardHeader>
                                 <CardTitle className="flex justify-between text-lg text-gray-700">
-                                    {showAllTowns
-                                        ? "Buyer Distribution for All Towns"
-                                        : selectedMonth
-                                            ? `Revenue Distribution for ${selectedMonth}`
-                                            : "Buyer Distribution by Town"}
+                                    <div className="flex flex-col">
+                                        {showAllTowns
+                                            ? "Buyer Distribution for All Towns"
+                                            : selectedMonth
+                                                ? `Revenue Distribution for ${selectedMonth}`
+                                                : "Buyer Distribution by Town"}
+                                        <div className="space-y-2 mt-2">
+                                            {showAllTowns ? (
+                                                <div className="flex flex-col">
+                                                    <p>
+                                                        Total Customers: <strong>
+                                                            {chartData?.reduce((sum, item) => sum + (item[dataKey] || 0), 0)}
+                                                        </strong>
+                                                    </p>
+                                                    <p>
+                                                        Top City/Town: <strong>
+                                                            {chartData?.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])?.town} (
+                                                            {chartData?.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])[dataKey]})
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col">
+                                                    <p>
+                                                        Total Revenue: <strong>₱
+                                                            {chartData?.reduce((sum, item) => sum + (item[dataKey] || 0), 0).toLocaleString()}
+                                                        </strong>
+                                                    </p>
+                                                    <p>
+                                                        Top City/Town: <strong>
+                                                            {chartData?.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])?.town} (
+                                                                ₱{chartData?.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])[dataKey].toLocaleString()}
+                                                            )
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     <Button
                                         onClick={() => setShowAllTowns((prev) => !prev)}
