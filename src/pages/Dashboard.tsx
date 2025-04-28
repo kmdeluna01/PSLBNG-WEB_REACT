@@ -7,6 +7,7 @@ import {
 import axios from "axios";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet"; // Leaflet library for rendering the map
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import React, { useMemo } from "react";
@@ -32,6 +33,16 @@ export default function Dashboard() {
     const chartData = showAllTowns ? townData : selectedMonthData;
     const dataKey = showAllTowns ? "count" : "totalRevenue";
     const vendorId = localStorage.getItem("vendorId");
+
+    const [selectedData, setSelectedData] = useState(null); // For modal data
+    const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+
+    console.log(deliveredOrders, "deliveredOrders");
+
+    const handlePieClick = (data) => {
+        setSelectedData(data);
+        setIsModalOpen(true);
+    };
 
     // Initial data fetching
     useEffect(() => {
@@ -243,59 +254,126 @@ export default function Dashboard() {
                     </Card>
 
                     {/* Buyer Distribution Pie Chart */}
-                    <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
-                        <CardHeader>
-                            <CardTitle className="flex justify-between text-lg text-gray-700">
-                                {showAllTowns
-                                    ? "Buyer Distribution for All Towns"
-                                    : selectedMonth
-                                        ? `Revenue Distribution for ${selectedMonth}`
-                                        : "Buyer Distribution by Town"}
+                    <>
+                        <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
+                            <CardHeader>
+                                <CardTitle className="flex justify-between text-lg text-gray-700">
+                                    {showAllTowns
+                                        ? "Buyer Distribution for All Towns"
+                                        : selectedMonth
+                                            ? `Revenue Distribution for ${selectedMonth}`
+                                            : "Buyer Distribution by Town"}
 
-                                <Button
-                                    onClick={() => setShowAllTowns((prev) => !prev)}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
-                                >
-                                    {showAllTowns ? "View Selected Month" : "See All Town"}
-                                </Button>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="w-full">
-                                {loading ? (
-                                    <div className="flex justify-center items-center h-72">
-                                        <div className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
-                                    </div>
-                                ) : chartData && chartData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <PieChart>
-                                            <Pie
-                                                data={chartData}
-                                                dataKey={dataKey}
-                                                nameKey="town"
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius="90%"
-                                            >
-                                                {chartData.map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={colors[entry.town] || "#ccc"}
-                                                    />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip />
-                                            <Legend layout="horizontal" align="center" verticalAlign="bottom" />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <p className="text-center text-gray-500">
-                                        {showAllTowns ? "No data available" : selectedMonth ? "No data for this month" : "Select a month to view details"}
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    <Button
+                                        onClick={() => setShowAllTowns((prev) => !prev)}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+                                    >
+                                        {showAllTowns ? "View Selected Month" : "See All Town"}
+                                    </Button>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="w-full">
+                                    {loading ? (
+                                        <div className="flex justify-center items-center h-72">
+                                            <div className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
+                                        </div>
+                                    ) : chartData && chartData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={chartData}
+                                                    dataKey={dataKey}
+                                                    nameKey="town"
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    outerRadius="90%"
+                                                    onClick={handlePieClick}
+                                                >
+                                                    {chartData.map((entry, index) => (
+                                                        <Cell
+                                                            key={`cell-${index}`}
+                                                            fill={colors[entry.town] || "#ccc"}
+                                                        />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip />
+                                                <Legend layout="horizontal" align="center" verticalAlign="bottom" />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <p className="text-center text-gray-500">
+                                            {showAllTowns ? "No data available" : selectedMonth ? "No data for this month" : "Select a month to view details"}
+                                        </p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Modal Section */}
+                        {selectedData && (
+                            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogTitle className="text-lg font-semibold mb-2">
+                                        {selectedData?.town} Customers
+                                        <div className="space-y-2 mt-2">
+                                            {showAllTowns ? (
+                                                <p>Total: <strong>{selectedData?.[dataKey]}</strong></p>
+                                            ) : (
+                                                <p>Total Revenue: <strong>₱{selectedData?.[dataKey]}</strong></p>
+                                            )}
+                                        </div>
+                                    </DialogTitle>
+
+                                    <DialogDescription>
+                                        <div className="overflow-x-auto max-h-96 mt-4">
+                                            <table className="min-w-full border-collapse border border-gray-200">
+                                                <thead>
+                                                    <tr className="bg-gray-100 text-gray-700">
+                                                        <th className="border border-gray-300 px-4 py-2 text-left">Order #</th>
+                                                        <th className="border border-gray-300 px-4 py-2 text-left">Total</th>
+                                                        <th className="border border-gray-300 px-4 py-2 text-left">Mode of Payment</th>
+                                                        <th className="border border-gray-300 px-4 py-2 text-left">Customer Email</th>
+                                                        <th className="border border-gray-300 px-4 py-2 text-left">Customer Number</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {(() => {
+                                                        const townOrders = deliveredOrders.filter(order => order.userId?.addressGeocoded === selectedData.town);
+                                                        if (townOrders.length > 0) {
+                                                            return townOrders.map((order) => (
+                                                                <tr key={order._id} className="hover:bg-gray-50">
+                                                                    <td className="border border-gray-300 px-4 py-2">{order.orderNum}</td>
+                                                                    <td className="border border-gray-300 px-4 py-2">
+                                                                        ₱{order.items.reduce((total, item) => total + (item.product_id?.price || 0) * item.quantity, 0)}
+                                                                    </td>
+                                                                    <td className="border border-gray-300 px-4 py-2">{order.paymentMode}</td>
+                                                                    <td className="border border-gray-300 px-4 py-2">{order.userId?.email || "N/A"}</td>
+                                                                    <td className="border border-gray-300 px-4 py-2">{order.userId?.number || "N/A"}</td>
+                                                                </tr>
+                                                            ));
+                                                        } else {
+                                                            return (
+                                                                <tr>
+                                                                    <td colSpan={5} className="border border-gray-300 px-4 py-6 text-center text-gray-500">
+                                                                        No delivered orders found for this town.
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        }
+                                                    })()}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </DialogDescription>
+                                </DialogContent>
+
+                            </Dialog>
+                        )}
+                    </>
+
+
+
                 </div>
 
                 {/* Orders History Table Card */}
