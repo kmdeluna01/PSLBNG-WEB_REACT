@@ -17,6 +17,7 @@ export default function SalesDashboard() {
   const [revenue, setRevenue] = useState(0);
   const [profit, setProfit] = useState(0);
   const [deliveredOrders, setDeliveredOrders] = useState([]);
+  const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'COD' | 'MAYA'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Modal for delivered orders
   const [loading, setLoading] = useState(true);  // Loading state for the data fetching
   const { toast } = useToast();  // Toast hook for notifications
@@ -64,6 +65,11 @@ export default function SalesDashboard() {
   const sortedTopProducts = useMemo(() => {
     return [...topProducts].sort((a, b) => b.sold - a.sold);
   }, [topProducts]);
+
+  const filteredOrders = useMemo(() => {
+    if (paymentFilter === 'ALL') return deliveredOrders;
+    return deliveredOrders.filter(order => order.paymentMode === paymentFilter);
+  }, [deliveredOrders, paymentFilter]);
 
   return (
     <div className="min-h-screen">
@@ -152,17 +158,38 @@ export default function SalesDashboard() {
           <DialogHeader>
             <DialogTitle>Sold Items</DialogTitle>
           </DialogHeader>
-          {deliveredOrders.length > 0 ? (
+
+          <div className="mt-2">
+            <label htmlFor="paymentFilter" className="mr-2 text-sm font-medium text-gray-700">
+              Payment Mode:
+            </label>
+            <select
+              id="paymentFilter"
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value as 'ALL' | 'COD' | 'MAYA')}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+            >
+              <option value="ALL">All</option>
+              <option value="COD">Cash on Delivery (COD)</option>
+              <option value="MAYA">Maya</option>
+            </select>
+          </div>
+
+          {filteredOrders.length > 0 ? (
             <ul className="space-y-4 h-full">
-              {deliveredOrders.map(order => (
+              {filteredOrders.map(order => (
                 <div key={order._id} className="mt-4 p-4 border-b border-gray-200">
                   <h3 className="font-semibold text-gray-900">Order #{order.orderNum}</h3>
-                  <p className="text-sm text-gray-600">Mode of Payment: {order.paymentMode}</p>
+                  <p className="text-sm text-gray-600">Mode of Payment: <strong>{order.paymentMode}</strong></p>
+                  <p className="text-sm text-gray-600">Total Items: <strong>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></p>
 
-                  {/* Loop through the items in each order */}
-                  <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+                  {/* Grid layout for items */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto mt-4">
                     {order.items.map(item => (
-                      <div key={item._id} className="flex items-center mt-3 bg-gray-100 p-3 rounded-md">
+                      <div
+                        key={item._id}
+                        className="flex items-center bg-gray-100 p-3 rounded-md"
+                      >
                         <img
                           src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=No+Image'}
                           className="w-20 h-20 rounded-md object-cover"
@@ -180,10 +207,11 @@ export default function SalesDashboard() {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No delivered orders</p>
+            <p className="text-gray-500">
+              No delivered orders{paymentFilter !== 'ALL' ? ` with ${paymentFilter}` : ''}
+            </p>
           )}
         </DialogContent>
-
       </Dialog>
     </div>
   );
