@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Import necessary libraries and components
 import { useState, useEffect } from "react"; // Hooks for state management and side effects
 import { Button } from "@/components/ui/button"; // Custom Button component

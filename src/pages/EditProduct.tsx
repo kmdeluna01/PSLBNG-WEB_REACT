@@ -24,6 +24,8 @@ const EditProduct = () => {
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [description, setDescription] = useState('');
+  const [availability, setAvailability] = useState('');
+  //console.log(availability);
   const [photo, setPhoto] = useState(null);
   const [isUploading, setIsUploading] = useState(false); // For loading state during upload
 
@@ -40,6 +42,7 @@ const EditProduct = () => {
           setPrice(product.price.toString());
           setQuantity(product.quantity.toString());
           setDescription(product.description);
+          setAvailability(product.availability);
           setPhoto(product.image);
         } else {
           throw new Error("Product not found");
@@ -105,24 +108,42 @@ const EditProduct = () => {
     setIsUploading(false); // Reset loading state
   };
 
-  // Handle deleting the product
-  const handleDelete = async () => {
+  const handleMarkUnavailable = async () => {
     try {
-      await axios.delete(`${baseURL}/merchant/${product_id}/delete`);
+      await axios.put(`${baseURL}/merchant/${product_id}/unavailable`);
       toast({
         title: "Success",
-        description: "Product deleted successfully!",
+        description: "Product marked as not available!",
       });
-      navigate(-1); // Go back after deletion
+      navigate(-1); // Go back after marking unavailable
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error("Error updating product availability:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to delete product",
+        description: error.response?.data?.error || "Failed to update product",
         variant: "destructive",
       });
     }
   };
+
+  const handleMarkAvailable = async () => {
+    try {
+      await axios.put(`${baseURL}/merchant/${product_id}/available`);
+      toast({
+        title: "Success",
+        description: "Product marked as available!",
+      });
+      navigate(-1); // Go back after marking available
+    } catch (error) {
+      console.error("Error updating product availability:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update product",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   // UI rendering
   return (
@@ -187,13 +208,16 @@ const EditProduct = () => {
                 {isUploading ? "Saving..." : "Save"}
               </Button>
               <Button
-                variant="destructive"
+                variant={availability ? "destructive" : "custom"}
                 onClick={() =>
-                  window.confirm("Are you sure you want to delete this product?") &&
-                  handleDelete()
+                  window.confirm(
+                    availability
+                      ? "Mark this product as not available?"
+                      : "Mark this product as available?"
+                  ) && (availability ? handleMarkUnavailable() : handleMarkAvailable())
                 }
               >
-                Delete Product
+                {availability ? "Mark as Unavailable" : "Mark as Available"}
               </Button>
             </div>
           </div>

@@ -22,6 +22,7 @@ export default function Products() {
   const [isRefreshing, setIsRefreshing] = useState(false); // For managing refresh state
   const [selectedComments, setSelectedComments] = useState([]); // For managing selected comments
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false); // For managing comments modal state
+  const [availabilityFilter, setAvailabilityFilter] = useState("all"); // New state for filter
 
   // Effect to ensure user is logged in, redirects to home if not
   useEffect(() => {
@@ -103,6 +104,18 @@ export default function Products() {
     setSelectedComments([]); // Clear selected comments
   };
 
+  // Function to filter products by availability
+  const filteredProducts = userProducts.filter((product) => {
+    const quantity = Number(product.quantity); // Ensure quantity is numeric
+    const isAvailable = product.availability === true;
+
+    if (availabilityFilter === "all") return true;
+    if (availabilityFilter === "available") return quantity > 0 && isAvailable;
+    if (availabilityFilter === "unavailable") return quantity === 0 || !isAvailable;
+    return true;
+  });
+
+
   // Function to render content based on loading, error, or empty state
   const renderContent = () => {
     if (isLoading || isRefreshing) { // Loading state
@@ -121,7 +134,7 @@ export default function Products() {
       );
     }
 
-    if (!userProducts || userProducts.length === 0) { // No products state
+    if (!filteredProducts || filteredProducts.length === 0) { // No products state
       return (
         <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
           <Card className="w-full max-w-md">
@@ -139,78 +152,85 @@ export default function Products() {
     // Products available state
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 py-4">
-        {userProducts.map((product) => (
+        {filteredProducts.map((product) => (
           <div
             key={product._id}
-            className="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full cursor-pointer"
-            onClick={() => navigate(`/products/${product._id}/edit`)} // Navigate to product edit page
+            className="relative bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow w-full cursor-pointer"
+            onClick={() => navigate(`/products/${product._id}/edit`)}
           >
-            <div className="relative rounded-lg">
-              {/* Image Section */}
-              {product.image && (
-                <div className="w-full h-48 md:h-56 lg:h-64">
-                  <img
-                    src={product.image}
-                    alt={product.productName}
-                    className="w-full h-full object-cover rounded-t-lg"
-                  />
-                </div>
-              )}
+            {/* Unavailable Overlay */}
+            {(product.quantity === 0 || product.availability === false) && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
+                <span className="bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded">
+                  Unavailable
+                </span>
+              </div>
+            )}
 
-              {/* Card Header */}
-              <div className="p-4 text-left">
-                <div className="flex flex-row items-center justify-between">
-                  <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
-                    {product.productName}
-                  </h3>
-                  <div className="text-left flex items-center">
-                    {[...Array(5)].map((_, index) => (
-                      <Star
-                        key={index}
-                        className={`w-4 h-4 ${index < Math.floor(product.ratings?.average)
-                          ? "text-yellow-500 fill-yellow-500"
-                          : index < product.ratings?.average
-                            ? "text-yellow-300 fill-yellow-300"
-                            : "text-gray-300"
-                          }`}
-                      />
-                    ))}
-                    <span className="ml-2 text-sm text-gray-600">
-                      ({product.ratings?.totalRatings || 0})
-                    </span>
-                  </div>
-                </div>
+            {/* Product Image */}
+            {product.image && (
+              <div className="w-full h-48 md:h-56 lg:h-64">
+                <img
+                  src={product.image}
+                  alt={product.productName}
+                  className="w-full h-full object-cover rounded-t-lg"
+                />
+              </div>
+            )}
 
-                <div className="flex flex-row justify-between">
-                  <p className="text-vendor-600 font-medium">
-                    ₱{product.price ? product.price.toLocaleString() : "N/A"}
-                  </p>
-                  <p className="text-sm text-vendor-500">{product.sold} Sold</p>
+            {/* Product Info */}
+            <div className="p-4 text-left">
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="text-xl font-semibold text-vendor-800 line-clamp-1">
+                  {product.productName}
+                </h3>
+                <div className="text-left flex items-center">
+                  {[...Array(5)].map((_, index) => (
+                    <Star
+                      key={index}
+                      className={`w-4 h-4 ${index < Math.floor(product.ratings?.average)
+                        ? "text-yellow-500 fill-yellow-500"
+                        : index < product.ratings?.average
+                          ? "text-yellow-300 fill-yellow-300"
+                          : "text-gray-300"
+                        }`}
+                    />
+                  ))}
+                  <span className="ml-2 text-sm text-gray-600">
+                    ({product.ratings?.totalRatings || 0})
+                  </span>
                 </div>
-
-                <p className="text-sm text-vendor-500">Stock: {product.quantity}</p>
               </div>
 
-              {/* Card Content */}
-              <div className="p-4 text-left">
-                <p className="text-vendor-600 text-sm line-clamp-1">
-                  {product.description}
+              <div className="flex flex-row justify-between">
+                <p className="text-vendor-600 font-medium">
+                  ₱{product.price ? product.price.toLocaleString() : "N/A"}
                 </p>
-
-                {/* Open Comments Modal Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openCommentsModal(product.ratings?.reviews); // Open comments for the product
-                  }}
-                  className="flex py-2 text-gray-600 hover:text-gray-800"
-                >
-                  <MessageSquareText className="w-5 h-5 cursor-pointer" />
-                  <span className="ml-2 text-sm">{product.ratings?.reviews?.length || 0}</span>
-                </button>
+                <p className="text-sm text-vendor-500">{product.sold} Sold</p>
               </div>
+
+              <p className="text-sm text-vendor-500">Stock: {product.quantity}</p>
+            </div>
+
+            <div className="p-4 text-left">
+              <p className="text-vendor-600 text-sm line-clamp-1">
+                {product.description}
+              </p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openCommentsModal(product.ratings?.reviews);
+                }}
+                className="flex py-2 text-gray-600 hover:text-gray-800"
+              >
+                <MessageSquareText className="w-5 h-5 cursor-pointer" />
+                <span className="ml-2 text-sm">
+                  {product.ratings?.reviews?.length || 0}
+                </span>
+              </button>
             </div>
           </div>
+
         ))}
       </div>
     );
@@ -218,12 +238,25 @@ export default function Products() {
 
   return (
     <div className="min-h-screen">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
         <h2 className="text-2xl font-bold text-gray-800">Products</h2>
-        <Button onClick={handleAddProduct} variant="custom">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <label htmlFor="availability-filter" className="text-sm text-gray-700">Availability:</label>
+          <select
+            id="availability-filter"
+            value={availabilityFilter}
+            onChange={e => setAvailabilityFilter(e.target.value)}
+            className="border rounded px-2 py-2.5 text-sm"
+          >
+            <option value="all">All</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+          <Button onClick={handleAddProduct} variant="custom">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
       {renderContent()} {/* Render content based on loading or available products */}
       <UploadProduct
