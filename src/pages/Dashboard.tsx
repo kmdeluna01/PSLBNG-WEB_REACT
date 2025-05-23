@@ -19,7 +19,9 @@ const baseURL = import.meta.env.VITE_API_URL || "";
 export default function Dashboard() {
     // State variables to manage fetched data and UI state
     const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+    //console.log(monthlyRevenue, "monthlyRevenue");
     const [deliveredOrders, setDeliveredOrders] = useState([]);
+    //console.log(deliveredOrders, "deliveredOrders");
     const [canceledOrders, setCanceledOrders] = useState([]);
     const [activeTab, setActiveTab] = useState("delivered");
     const [location, setLocation] = useState(null);
@@ -28,17 +30,22 @@ export default function Dashboard() {
     const [townData, setTownData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(null);
+    //console.log(selectedMonth, "selectedMonth");
     const [selectedMonthData, setSelectedMonthData] = useState(null);
+    //console.log(selectedMonthData, "selectedMonthData");
     const [showAllTowns, setShowAllTowns] = useState(false);
+    const [summaryType, setSummaryType] = useState("month"); // New state for summary type
 
     const chartData = showAllTowns ? townData : selectedMonthData;
+    console.log(chartData, "chartData");
     const dataKey = showAllTowns ? "count" : "totalRevenue";
     const vendorId = localStorage.getItem("vendorId");
 
     const [selectedData, setSelectedData] = useState(null); // For modal data
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+    const [selectedMonthForDay, setSelectedMonthForDay] = useState(""); // Add this state for the day filter
 
-    console.log(deliveredOrders, "deliveredOrders");
+    //console.log(deliveredOrders, "deliveredOrders");
 
     const handlePieClick = (data) => {
         setSelectedData(data);
@@ -70,12 +77,50 @@ export default function Dashboard() {
         }
     }, [selectedMonth, deliveredOrders]);
 
-    // Handles clicking on line chart to select a month
+    // Update sales data when summaryType changes
+    useEffect(() => {
+        fetchSalesData();
+    }, [summaryType, vendorId]);
+
+    // --- Pie Chart Data Logic ---
+    // For summaryType 'month', clicking a line chart month shows pie by town for that month
+    // For other summaryTypes, clicking a line chart label shows pie by town for that label
+    const [selectedLabel, setSelectedLabel] = useState(null);
+    //console.log(selectedLabel, "selectedLabel");
+    const pieChartData = useMemo(() => {
+        if (!selectedLabel) return [];
+        if (summaryType === "day" && Array.isArray(selectedMonthData)) {
+            // For 'day', selectedLabel is a date string (e.g., '2025-05-22')
+            // selectedMonthData should be an array of { town, totalRevenue, day }
+            if (selectedMonthData.length > 0 && selectedMonthData[0].day) {
+                // Filter for the selected day
+                return selectedMonthData.filter(item => item.day === selectedLabel);
+            }
+            // If no 'day' property, just return selectedMonthData
+            return selectedMonthData;
+        }
+        if ((summaryType === "week" || summaryType === "month" || summaryType === "year") && Array.isArray(selectedMonthData)) {
+            // For week/month/year, selectedMonthData is already set to the correct breakdown for the selectedLabel
+            return selectedMonthData;
+        }
+        return [];
+    }, [selectedLabel, summaryType, selectedMonthData]);
+    console.log(pieChartData, "pieChartData");
+    // --- Update Pie Chart on Line Chart Click ---
     const handleLineChartClick = (data) => {
         if (data && data.activeLabel) {
-            setSelectedMonth(data.activeLabel);
+            setSelectedLabel(data.activeLabel);
         }
     };
+
+    // --- Set default selectedLabel on data load or summaryType change ---
+    useEffect(() => {
+        if (monthlyRevenue.length > 0) {
+            setSelectedLabel(monthlyRevenue[0].month);
+        } else {
+            setSelectedLabel(null);
+        }
+    }, [monthlyRevenue, summaryType]);
 
     // Generates a random hex color
     const getRandomColor = () => {
@@ -114,11 +159,22 @@ export default function Dashboard() {
     // Fetches sales data for the vendor
     const fetchSalesData = async () => {
         try {
-            const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`);
-            const { monthlyRevenue } = res.data;
-            setMonthlyRevenue(monthlyRevenue);
+            const res = await axios.get(`${baseURL}/merchant/${vendorId}/sales-summary`, {
+                params: { type: summaryType }
+            });
+            const { report } = res.data;
+            // Adapt the report to the chart format
+            if (Array.isArray(report)) {
+                setMonthlyRevenue(report.map(item => ({
+                    month: item.label,
+                    totalRevenue: item.revenue
+                })));
+            } else {
+                setMonthlyRevenue([]);
+            }
         } catch (error) {
             console.error("Error fetching sales data: ", error);
+            setMonthlyRevenue([]);
         }
     };
 
@@ -212,13 +268,94 @@ export default function Dashboard() {
         return monthlyData;
     };
 
+    // --- Filtered daily data by month ---
+    const filteredDailyRevenue = useMemo(() => {
+        if (summaryType !== "day" || !selectedMonthForDay) return monthlyRevenue;
+        // Expecting month in format 'Month YYYY' (e.g., 'May 2025')
+        return monthlyRevenue.filter(item => {
+            // Try to extract month and year from item.label or item.month
+            const label = item.label || item.month;
+            if (!label) return false;
+            // Accept both 'YYYY-MM-DD' and 'Month YYYY' formats
+            const date = new Date(label);
+            const monthYear = date.toLocaleString("default", { month: "long", year: "numeric" });
+            return monthYear === selectedMonthForDay;
+        });
+    }, [monthlyRevenue, summaryType, selectedMonthForDay]);
+
+    // --- Get unique months for dropdown ---
+    const availableMonths = useMemo(() => {
+        if (!Array.isArray(monthlyRevenue)) return [];
+        const monthsSet = new Set();
+        monthlyRevenue.forEach(item => {
+            const label = item.label || item.month;
+            if (!label) return;
+            const date = new Date(label);
+            const monthYear = date.toLocaleString("default", { month: "long", year: "numeric" });
+            monthsSet.add(monthYear);
+        });
+        return Array.from(monthsSet);
+    }, [monthlyRevenue]);
+
+    // --- Set default selectedMonthForDay when summaryType or data changes ---
+    useEffect(() => {
+        if (summaryType === "day" && availableMonths.length > 0) {
+            setSelectedMonthForDay(availableMonths[0]);
+        } else {
+            setSelectedMonthForDay("");
+        }
+    }, [summaryType, availableMonths]);
+
+    // Update selectedMonthData when selectedLabel changes (for month summary)
+    useEffect(() => {
+        if (summaryType !== "day" && selectedLabel && deliveredOrders.length > 0) {
+            const monthData = getMonthDistribution(deliveredOrders);
+            if (monthData[selectedLabel]) {
+                setSelectedMonthData(
+                    Object.entries(monthData[selectedLabel]).map(([town, totalRevenue]) => ({ town, totalRevenue }))
+                );
+            } else {
+                setSelectedMonthData([]);
+            }
+        }
+    }, [selectedLabel, summaryType, deliveredOrders]);
+
     // The return block is the rendered UI — including charts, buttons, and maps.
     // For space reasons, the UI block was omitted here but contains conditional rendering
     // for charts (line, pie), map views (heatmap), and order tables for delivered/canceled orders.
     return (
         <div className="min-h-screen">
-            <div className="flex items-center mb-6">
+            <div className="flex items-center mb-6 gap-4">
                 <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <div>
+                    <select
+                        id="summary-type"
+                        value={summaryType}
+                        onChange={e => setSummaryType(e.target.value)}
+                        className="border rounded px-2 py-1 text-sm"
+                    >
+                        <option value="day">Day</option>
+                        <option value="week">Week</option>
+                        <option value="month">Month</option>
+                        <option value="year">Year</option>
+                    </select>
+                </div>
+                {/* Month filter for daily summary */}
+                {summaryType === "day" && (
+                    <div className="ml-4">
+                        <label htmlFor="month-filter" className="mr-2 text-sm text-gray-700">Month:</label>
+                        <select
+                            id="month-filter"
+                            value={selectedMonthForDay}
+                            onChange={e => setSelectedMonthForDay(e.target.value)}
+                            className="border rounded px-2 py-1 text-sm"
+                        >
+                            {availableMonths.map(month => (
+                                <option key={month} value={month}>{month}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
             {/* Monthly Sales Graph */}
             <div className="space-y-8">
@@ -227,16 +364,70 @@ export default function Dashboard() {
                     {/* Monthly Sales Line Chart */}
                     <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                         <CardHeader>
-                            <CardTitle className="text-lg text-gray-700">Monthly Sales 2025</CardTitle>
+                            <CardTitle className="text-lg text-gray-700">{summaryType === "day" ? "Daily Sales" : summaryType.charAt(0).toUpperCase() + summaryType.slice(1) + " Sales 2025"}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="w-full">
                                 <ResponsiveContainer width="100%" height={300}>
-                                    {monthlyRevenue.length > 0 ? (
-                                        <LineChart data={monthlyRevenue} onClick={handleLineChartClick}>
-                                            <XAxis dataKey="month" tickFormatter={(month) => month.substring(0, 3)} />
+                                    {filteredDailyRevenue.length > 0 ? (
+                                        <LineChart data={filteredDailyRevenue} onClick={handleLineChartClick}>
+                                            <XAxis
+                                                dataKey="month"
+                                                tickFormatter={month => {
+                                                    if (summaryType === "day") {
+                                                        // Remove year from YYYY-MM-DD
+                                                        // Show as 'MMM DD' (e.g., May 22)
+                                                        const date = new Date(month);
+                                                        if (!isNaN(date)) {
+                                                            return date.toLocaleString("default", { month: "short", day: "numeric" });
+                                                        }
+                                                        // fallback: just show the last 5 chars (DD)
+                                                        return month.slice(-3);
+                                                    }
+                                                    if (summaryType === "week" || summaryType === "month") {
+                                                        // Remove year from label (e.g., 'May 2025' -> 'May')
+                                                        // For week: 'Week 21, 2025' -> 'Week 21'
+                                                        if (typeof month === "string") {
+                                                            // For week
+                                                            if (summaryType === "week" && month.startsWith("Week ")) {
+                                                                return month.split(",")[0];
+                                                            }
+                                                            // For month
+                                                            if (summaryType === "month") {
+                                                                // Try to parse as 'Month YYYY'
+                                                                const parts = month.split(",");
+                                                                return parts[0];
+                                                            }
+                                                        }
+                                                    }
+                                                    return month.substring(0, 10);
+                                                }}
+                                            />
                                             <YAxis />
-                                            <Tooltip />
+                                            <Tooltip
+                                                labelFormatter={label => {
+                                                    if (summaryType === "day") {
+                                                        const date = new Date(label);
+                                                        if (!isNaN(date)) {
+                                                            return date.toLocaleString("default", { month: "long", day: "numeric" });
+                                                        }
+                                                        return label;
+                                                    }
+                                                    if (summaryType === "week" || summaryType === "month") {
+                                                        // Remove year from label for tooltip
+                                                        if (typeof label === "string") {
+                                                            if (summaryType === "week" && label.startsWith("Week ")) {
+                                                                return label.split(",")[0];
+                                                            }
+                                                            if (summaryType === "month") {
+                                                                const parts = label.split(",");
+                                                                return parts[0];
+                                                            }
+                                                        }
+                                                    }
+                                                    return label;
+                                                }}
+                                            />
                                             <Line
                                                 type="monotone"
                                                 dataKey="totalRevenue"
@@ -262,8 +453,23 @@ export default function Dashboard() {
                                     <div className="flex flex-col">
                                         {showAllTowns
                                             ? "Buyer Distribution for All Towns"
-                                            : selectedMonth
-                                                ? `Revenue Distribution for ${selectedMonth}`
+                                            : selectedLabel
+                                                ? `Revenue Distribution for ${(() => {
+                                                    if (summaryType === "day") {
+                                                        const date = new Date(selectedLabel);
+                                                        if (!isNaN(date)) {
+                                                            return date.toLocaleString("default", { month: "long", day: "numeric" });
+                                                        }
+                                                        return selectedLabel;
+                                                    }
+                                                    if (summaryType === "week" && typeof selectedLabel === "string" && selectedLabel.startsWith("Week ")) {
+                                                        return selectedLabel.split(",")[0];
+                                                    }
+                                                    if (summaryType === "month" && typeof selectedLabel === "string") {
+                                                        return selectedLabel.split(",")[0];
+                                                    }
+                                                    return selectedLabel;
+                                                })()}`
                                                 : "Buyer Distribution by Town"}
                                         <div className="space-y-2 mt-2">
                                             {Array.isArray(chartData) && chartData.length > 0 ? (
@@ -319,19 +525,19 @@ export default function Dashboard() {
                                         <div className="flex justify-center items-center h-72">
                                             <div className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
                                         </div>
-                                    ) : chartData && chartData.length > 0 ? (
+                                    ) : pieChartData && pieChartData.length > 0 ? (
                                         <ResponsiveContainer width="100%" height={300}>
                                             <PieChart>
                                                 <Pie
-                                                    data={chartData}
-                                                    dataKey={dataKey}
+                                                    data={pieChartData}
+                                                    dataKey={showAllTowns ? "count" : "totalRevenue"}
                                                     nameKey="town"
                                                     cx="50%"
                                                     cy="50%"
                                                     outerRadius="90%"
                                                     onClick={handlePieClick}
                                                 >
-                                                    {chartData.map((entry, index) => (
+                                                    {pieChartData.map((entry, index) => (
                                                         <Cell
                                                             key={`cell-${index}`}
                                                             fill={colors[entry.town] || "#ccc"}
