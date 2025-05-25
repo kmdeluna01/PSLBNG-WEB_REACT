@@ -162,7 +162,7 @@ export default function Products() {
             {(product.quantity === 0 || product.availability === false) && (
               <div className="absolute inset-0 bg-black bg-opacity-50 z-0 flex items-center justify-center">
                 <span className="bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded">
-                  {product.quantity === 0 ? 'Out of products' : 'Unavailable'}
+                  {product.quantity === 0 ? 'Out of Stock' : 'Unavailable'}
                 </span>
               </div>
             )}

@@ -41,7 +41,12 @@ const LoginPage = () => {
 
     try {
       // Send login data to backend
-      const response = await axios.post(`${baseURL}/merchant-login`, loginData);
+      let response;
+      if (loginData.email === "Admin") {
+        response = await axios.post(`${baseURL}/admin-login`, loginData);
+      } else {
+        response = await axios.post(`${baseURL}/merchant-login`, loginData);
+      }
 
       // If login is successful
       if (response.data.status === "ok") {
@@ -49,11 +54,15 @@ const LoginPage = () => {
 
         // Store login info in localStorage
         localStorage.setItem("token", token);
-        localStorage.setItem("isMerchantAuth", "true");
-        localStorage.setItem("vendorId", vendor._id);
-
-        // Redirect to the merchant dashboard
-        navigate("/merchant");
+        if (loginData.email === "Admin") {
+          // Redirect to the admin dashboard
+          navigate("/admin");
+        } else {
+          localStorage.setItem("isMerchantAuth", "true");
+          localStorage.setItem("vendorId", vendor._id);
+          // Redirect to the merchant dashboard
+          navigate("/merchant");
+        }
       } else {
         // If login fails
         throw new Error("Login failed");
@@ -85,7 +94,17 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required className="mt-2" />
+            <Input id="email" name="email" type="text" required className="mt-2"
+              pattern={undefined}
+              onInput={e => {
+                const input = e.target as HTMLInputElement;
+                if (input.value === "Admin") {
+                  input.removeAttribute("pattern");
+                } else {
+                  input.setAttribute("pattern", "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+                }
+              }}
+            />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>

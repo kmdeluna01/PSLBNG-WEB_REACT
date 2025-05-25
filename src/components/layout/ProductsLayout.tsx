@@ -33,6 +33,7 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
   // Interface for the shape of merchant details
   interface MerchantDetails {
     notifications: { id: string; message: string; date: Date; read: boolean }[];
+    verified?: boolean;
   }
 
   // State to store merchant data including notifications
@@ -88,6 +89,9 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
     navigate("/");
   };
 
+  // Add merchant verification status
+  const isVerified = merchantDetails.verified !== false;
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-vendor-100">
@@ -120,6 +124,27 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
           {/* Top Navigation Bar */}
           <div className="bg-white shadow-md px-4 flex justify-end items-center">
             <div className="flex items-center gap-4">
+              {/* Show warning if merchant is not verified, or verified label if verified */}
+              {!isVerified ? (
+                <>
+                  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-xs font-semibold mr-2">
+                    Account not verified
+                  </span>
+                  <Button
+                    size="sm"
+                    className="bg-yellow-500 text-white hover:bg-yellow-600"
+                    onClick={() => navigate("/merchant/details")}
+                  >
+                    Get Verified
+                  </Button>
+                </>
+              ) : (
+                <span className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-semibold mr-2">
+                  Verified
+                  <svg className="ml-1 w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586l-2.293-2.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 00-1.414-1.414z" clipRule="evenodd" /></svg>
+                </span>
+              )}
+
               {/* Notification Bell with badge */}
               <DropdownMenu onOpenChange={(isOpen) => isOpen && handleNotification()}>
                 <DropdownMenuTrigger>

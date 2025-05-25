@@ -15,6 +15,8 @@ import PendingOrder from "./pages/Orders";
 import SecuritySettings from "./pages/SecuritySettings";
 import SalesDashboard from "./pages/Sales";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import { AdminLayout } from "./components/layout/AdminLayout";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,16 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/admin/"
+            element={
+              <ProtectedRoute>
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/merchant/"
             element={
@@ -77,7 +89,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <ProductsLayout>
-                  <PendingOrder/>
+                  <PendingOrder />
                 </ProductsLayout>
               </ProtectedRoute>
             }
@@ -87,27 +99,27 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <ProductsLayout>
-                  <MerchantDetails/>
+                  <MerchantDetails />
                 </ProductsLayout>
               </ProtectedRoute>
             }
           />
           <Route
-          path="/merchant/sales"
-          element={
-            <ProtectedRoute>
-              <ProductsLayout>
-                <SalesDashboard/>
-              </ProductsLayout>
-            </ProtectedRoute>
-          }
-        />
+            path="/merchant/sales"
+            element={
+              <ProtectedRoute>
+                <ProductsLayout>
+                  <SalesDashboard />
+                </ProductsLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/merchant/security-settings"
             element={
               <ProtectedRoute>
                 <ProductsLayout>
-                  <SecuritySettings/>
+                  <SecuritySettings />
                 </ProductsLayout>
               </ProtectedRoute>
             }

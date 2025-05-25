@@ -29,12 +29,14 @@ const MerchantDetails = () => {
   const navigate = useNavigate();  // Navigation hook for routing
   const [showModal, setShowModal] = useState(false);  // State to control the modal visibility
   const [name, setName] = useState("");  // State to store shop name
+  const [permit, setPermit] = useState("");
   const [email, setEmail] = useState("");  // State to store email
   const [number, setNumber] = useState("");  // State to store phone number
   const [location, setLocation] = useState(null);  // State to store the location
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(false);  // Track if the user is using current location
   const [saving, setSaving] = useState(false);  // State to control saving status
   const [loading, setLoading] = useState(false);  // State to control loading status
+  const [businessPermit, setBusinessPermit] = useState(null); // State for business permit file
 
   // Handle selecting current location
   const handleCurrentLocation = () => {
@@ -45,9 +47,9 @@ const MerchantDetails = () => {
 
   // Handle selecting location by pin
   const handlePinLocation = () => {
-      setIsUsingCurrentLocation(false);
-      setActiveButton("pin");
-      setShowModal(true);  // Show modal for pinning a location
+    setIsUsingCurrentLocation(false);
+    setActiveButton("pin");
+    setShowModal(true);  // Show modal for pinning a location
   };
 
   useEffect(() => {
@@ -104,7 +106,13 @@ const MerchantDetails = () => {
         setName(profileDetails.name);
         setEmail(profileDetails.email);
         setNumber(profileDetails.number);
-        setLocation(profileDetails.location || { latitude: 51.505, longitude: -0.09 });  // Set default location if none is found
+        setPermit(profileDetails.permit);
+        // Only set location if valid
+        if (profileDetails.location && profileDetails.location.latitude && profileDetails.location.longitude) {
+          setLocation(profileDetails.location);
+        } else {
+          setLocation({ latitude: 51.505, longitude: -0.09 }); // Default location
+        }
       } catch (error) {
         console.error("Error fetching user data: ", error);  // Log error if request fails
       }
@@ -120,17 +128,24 @@ const MerchantDetails = () => {
     if (!name || !email || !number || !location) {
       return alert("Please fill in all fields and set a location.");
     }
+    if (!businessPermit) {
+      alert("Please upload your Business Permit for verification.");
+      setSaving(false);
+      return;
+    }
 
-    const updatedData = {
-      name,
-      email,
-      number,
-      location,
-    };
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("number", number);
+    formData.append("location", JSON.stringify(location));
+    formData.append("permit", businessPermit);
 
     try {
       // Send updated data to the API
-      await axios.post(`${baseURL}/updateProfile/merchant/${vendorId}`, updatedData);
+      await axios.post(`${baseURL}/updateProfile/merchant/${vendorId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast({
         title: "Success",
         description: "Profile edited successfully!",
@@ -138,9 +153,7 @@ const MerchantDetails = () => {
       navigate("/merchant");  // Navigate to the merchant profile page
       getUserDetails();  // Fetch updated details
     } catch (error) {
-      console.error(error.response.data);  // Log the error response from the API
-
-      // Extract the error message and show a toast notification
+      console.error(error.response?.data);
       const errorMessage = error.response?.data?.message || "An unknown error occurred.";
       toast({
         title: "Error",
@@ -148,7 +161,7 @@ const MerchantDetails = () => {
         variant: "destructive",
       });
     }
-    setSaving(false);  // Set saving status to false after saving
+    setSaving(false);
   };
 
   // Handle deleting the user's account
@@ -172,116 +185,151 @@ const MerchantDetails = () => {
 
   return (
     <div className="min-h-screen">
-        <div className="flex items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
-        </div>
+      <div className="flex items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
+      </div>
 
-        <div className="flex items-center space-x-4 mb-6">
-            <div className="w-16 h-16 flex items-center justify-center bg-green-500 text-white text-2xl font-bold rounded-full">
-            {name?.[0]}
-            </div>
-            <div>
-            <h3 className="text-lg font-semibold text-gray-800">{name}</h3>
-            <p className="text-gray-500">{number}</p>
-            </div>
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="w-16 h-16 flex items-center justify-center bg-green-500 text-white text-2xl font-bold rounded-full">
+          {name?.[0]}
         </div>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">{name}</h3>
+          <p className="text-gray-500">{number}</p>
+        </div>
+      </div>
 
-        <div className="space-y-4">
-            <div>
+      <div className="space-y-4">
+        {/* Arrange name, email, and number fields in a single row */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
             <label className="block text-gray-700">Shop Name</label>
             <input className="w-full px-4 py-2 border rounded-md" value={name} onChange={(e) => setName(e.target.value)} placeholder="Shop Name" />
-            </div>
-
-            <div>
+          </div>
+          <div className="flex-1">
             <label className="block text-gray-700">Email</label>
             <input className="w-full px-4 py-2 border rounded-md" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" />
-            </div>
-
-            <div>
+          </div>
+          <div className="flex-1">
             <label className="block text-gray-700">Phone Number</label>
             <input className="w-full px-4 py-2 border rounded-md" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Phone Number" type="tel" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-gray-700">Business Permit (for verification)</label>
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            className="w-full px-4 py-2 border rounded-md"
+            onChange={e => setBusinessPermit(e.target.files[0])}
+          />
+          {businessPermit && typeof businessPermit !== 'string' && (
+            <img
+              src={URL.createObjectURL(businessPermit)}
+              alt="Preview"
+              className="w-40 h-40 object-cover rounded mx-auto"
+            />
+          )}
+          {/* Display uploaded permit if available in profile */}
+          {permit && typeof permit === 'string' && (
+            <div className="w-full">
+              {permit.match(/\.(pdf)$/i) ? (
+                <a
+                  href={permit}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  View Uploaded Permit (PDF)
+                </a>
+              ) : (
+                <img
+                  src={permit}
+                  alt="Business Permit"
+                  className="w-full object-contain rounded-t-lg max-h-[600px]"
+                />
+              )}
             </div>
+          )}
+        </div>
 
-            <div>
-                <label className="block text-gray-700">Location</label>
-                <div className="grid grid-cols-2 gap-4 mt-2 pb-4">
-                  <Button
-                      type="button"
-                      className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
-                          activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
-                      }`}
-                      onClick={handleCurrentLocation}
-                      disabled={activeButton === "current"}
-                  >
-                      Use Current Location
-                  </Button>
+        <div>
+          <label className="block text-gray-700">Location</label>
+          <div className="grid grid-cols-2 gap-4 mt-2 pb-4">
+            <Button
+              type="button"
+              className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                }`}
+              onClick={handleCurrentLocation}
+              disabled={activeButton === "current"}
+            >
+              Use Current Location
+            </Button>
 
-                  <Button
-                      type="button"
-                      className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
-                          activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
-                      }`}
-                      onClick={handlePinLocation}
-                      disabled={activeButton === "pin"}
-                  >
-                      Pin a Location
-                  </Button>
+            <Button
+              type="button"
+              className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                }`}
+              onClick={handlePinLocation}
+              disabled={activeButton === "pin"}
+            >
+              Pin a Location
+            </Button>
+          </div>
+          <div className="h-[300px] rounded-lg overflow-hidden border">
+            {!showModal && (
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                {location && location.latitude !== undefined && location.longitude !== undefined && !loading ? (
+                  <MapContainer
+                    key={`${location.latitude}-${location.longitude}`}
+                    center={[location.latitude, location.longitude]}
+                    zoom={16}
+                    className="h-full w-full">
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker icon={customIcon} position={[location.latitude, location.longitude]} />
+                    <MapEvents />
+                  </MapContainer>
+                ) : (
+                  <p className="flex items-center justify-center h-full">Loading map...</p>
+                )}
               </div>
-                <div className="h-[300px] rounded-lg overflow-hidden border">
-                  {!showModal && (
-                    <div className="h-[300px] rounded-lg overflow-hidden border">
-                      {location && !loading ? (
-                        <MapContainer 
-                        key={`${location?.latitude}-${location?.longitude}`} 
-                        center={[location.latitude, location.longitude]} 
-                        zoom={16}
-                        className="h-full w-full">
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        {location && (
-                        <Marker icon={customIcon} position={[location.latitude, location.longitude]} />
-                        )}
-                        <MapEvents />
-                        </MapContainer>
-                        ) : (
-                        <p className="flex items-center justify-center h-full">Loading map...</p>
-                        )}
-                      </div>
-                    )}
-                </div>
-                
-            </div>
+            )}
+          </div>
+
         </div>
-        <div className="flex flex-row justify-between">
-        <button 
-            onClick={handleSave}
-            disabled={saving}
-            className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-            <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
-        </div>
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-              <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
-              <div className="h-[400px]">
-                <MapContainer 
-                key={`${location?.latitude}-${location?.longitude}`} 
-                center={[location.latitude, location.longitude]} 
+      </div>
+      <div className="flex flex-row justify-between">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-auto mt-6 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+        <button className="w-auto mt-6 bg-red-600 hover:bg-green-700 text-white px-4 py-2 rounded-md" onClick={handleDelete}>Delete Account</button>
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+            <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
+            <div className="h-[400px]">
+              <MapContainer
+                key={`${location?.latitude}-${location?.longitude}`}
+                center={[location.latitude, location.longitude]}
                 zoom={16} className="h-full">
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
-                  <MapEvents />
-                </MapContainer>
-              </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button className="bg-gray-700 hover:bg-gray-600 text-white" onClick={() => setShowModal(false)}>Cancel</Button>
-                <Button className="bg-green-700 hover:bg-green-600 text-white" onClick={() => setShowModal(false)}>Confirm Location</Button>
-              </div>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
+                <MapEvents />
+              </MapContainer>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button className="bg-gray-700 hover:bg-gray-600 text-white" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button className="bg-green-700 hover:bg-green-600 text-white" onClick={() => setShowModal(false)}>Confirm Location</Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };
