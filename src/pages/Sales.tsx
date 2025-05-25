@@ -25,6 +25,8 @@ export default function SalesDashboard() {
   const [userProducts, setUserProducts] = useState([]);  // State for user products
   const [loading, setLoading] = useState(true);  // Loading state for the data fetching
   const [summaryType, setSummaryType] = useState("month"); // New state for summary type
+  const [selectedProductId, setSelectedProductId] = useState(""); // State for selected product
+  const [productSummaryType, setProductSummaryType] = useState("day"); // New state for product summary type
   const { toast } = useToast();  // Toast hook for notifications
 
   // Effect hook to fetch sales data and delivered orders whenever the vendor ID changes
@@ -151,8 +153,21 @@ export default function SalesDashboard() {
     });
   };
 
-  // Filtered delivered orders for summaryType
-  const deliveredOrdersForSummary = useMemo(() => filterOrdersBySummaryType(deliveredOrders, summaryType), [deliveredOrders, summaryType]);
+  // Filtered delivered orders for summaryType (add product filter)
+  const deliveredOrdersForSummary = useMemo(() => {
+    if (summaryType === "product") {
+      let filtered = filterOrdersBySummaryType(deliveredOrders, productSummaryType);
+      if (selectedProductId) {
+        filtered = filtered.filter(order =>
+          order.items.some(item => (item.product_id?._id || item.product_id) === selectedProductId)
+        );
+      }
+      return filtered;
+    } else {
+      let filtered = filterOrdersBySummaryType(deliveredOrders, summaryType);
+      return filtered;
+    }
+  }, [deliveredOrders, summaryType, selectedProductId, productSummaryType]);
 
   // Items Sold, Revenue, Profit for summaryType
   const computedTotalSales = useMemo(() => deliveredOrdersForSummary.reduce((sum, order) => sum + order.items.reduce((s, i) => s + i.quantity, 0), 0), [deliveredOrdersForSummary]);
@@ -190,6 +205,22 @@ export default function SalesDashboard() {
     return deliveredOrders.filter(order => order.paymentMode === paymentFilter);
   }, [deliveredOrders, paymentFilter]);
 
+  // Filtered delivered orders for modal (Sold Items)
+  const deliveredOrdersForModal = useMemo(() => {
+    if (summaryType === "product") {
+      let filtered = filterOrdersBySummaryType(deliveredOrders, productSummaryType);
+      if (selectedProductId) {
+        filtered = filtered.filter(order =>
+          order.items.some(item => (item.product_id?._id || item.product_id) === selectedProductId)
+        );
+      }
+      return paymentFilter === 'ALL' ? filtered : filtered.filter(order => order.paymentMode === paymentFilter);
+    } else {
+      let filtered = filterOrdersBySummaryType(deliveredOrders, summaryType);
+      return paymentFilter === 'ALL' ? filtered : filtered.filter(order => order.paymentMode === paymentFilter);
+    }
+  }, [deliveredOrders, summaryType, selectedProductId, productSummaryType, paymentFilter]);
+
   return (
     <div className="min-h-screen">
       <div className="flex items-center mb-6 gap-4">
@@ -198,15 +229,45 @@ export default function SalesDashboard() {
           <select
             id="summary-type"
             value={summaryType}
-            onChange={e => setSummaryType(e.target.value)}
+            onChange={e => {
+              setSummaryType(e.target.value);
+              if (e.target.value !== "product") setSelectedProductId("");
+            }}
             className="border rounded px-2 py-1 text-sm"
           >
             <option value="all">All</option>
+            <option value="product">Select Product</option>
             <option value="day">Today</option>
             <option value="week">This Week</option>
             <option value="month">This Month</option>
             <option value="year">This Year</option>
           </select>
+          {summaryType === "product" && (
+            <>
+              <select
+                className="ml-2 border rounded px-2 py-1 text-sm"
+                value={selectedProductId}
+                onChange={e => setSelectedProductId(e.target.value)}
+              >
+                {Array.isArray(userProducts) && userProducts.map((prod) => (
+                  <option key={prod._id} value={prod._id}>{prod.productName}</option>
+                ))}
+              </select>
+              {selectedProductId && (
+                <select
+                  className="ml-2 border rounded px-2 py-1 text-sm"
+                  value={productSummaryType}
+                  onChange={e => setProductSummaryType(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  <option value="day">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                </select>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -244,25 +305,27 @@ export default function SalesDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
-              <CardHeader>
-                <CardTitle className="text-lg text-gray-700">Top Selling Products</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {computedTopProducts.length ? (
-                  <ul className="space-y-4">
-                    {computedTopProducts.map((product) => (
-                      <li key={product._id || product.productName} className="flex justify-between">
-                        <span>{product.productName}</span>
-                        <span className="font-semibold">{product.sold} sold</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No sales data available</p>
-                )}
-              </CardContent>
-            </Card>
+            {summaryType !== "product" && (
+              <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-700">Top Selling Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {computedTopProducts.length ? (
+                    <ul className="space-y-4">
+                      {computedTopProducts.map((product) => (
+                        <li key={product._id || product.productName} className="flex justify-between">
+                          <span>{product.productName}</span>
+                          <span className="font-semibold">{product.sold} sold</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No sales data available</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
@@ -308,36 +371,45 @@ export default function SalesDashboard() {
             </select>
           </div>
 
-          {filteredOrders.length > 0 ? (
+          {deliveredOrdersForModal.length > 0 ? (
             <ul className="space-y-4 h-full">
-              {filteredOrders.map(order => (
-                <div key={order._id} className="mt-4 p-4 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-900">Order #{order.orderNum}</h3>
-                  <p className="text-sm text-gray-600">Mode of Payment: <strong>{order.paymentMode}</strong></p>
-                  <p className="text-sm text-gray-600">Total Items: <strong>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></p>
+              {deliveredOrdersForModal.map(order => {
+                const hasMultipleProducts = order.items.length > 1;
+                return (
+                  <div key={order._id} className="mt-4 p-4 border-b border-gray-200">
+                    <h3 className="font-semibold text-gray-900">Order #{order.orderNum}</h3>
+                    <p className="text-sm text-gray-600">Mode of Payment: <strong>{order.paymentMode}</strong></p>
+                    <p className="text-sm text-gray-600">Total Items: <strong>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></p>
 
-                  {/* Grid layout for items */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto mt-4">
-                    {order.items.map(item => (
-                      <div
-                        key={item._id}
-                        className="flex items-center bg-gray-100 p-3 rounded-md"
-                      >
-                        <img
-                          src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=No+Image'}
-                          className="w-20 h-20 rounded-md object-cover"
-                          alt={item.product_id?.productName || 'Product Image'}
-                        />
-                        <div className="ml-4">
-                          <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
-                          <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
-                          <p className="text-sm text-gray-700">Sold <span className="font-bold">{item.quantity} items</span></p>
+                    {/* Responsive grid: stretch only if multiple products */}
+                    <div
+                      className={
+                        hasMultipleProducts
+                          ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[50vh] overflow-y-auto mt-4"
+                          : "flex flex-col items-start mt-4"
+                      }
+                    >
+                      {order.items.map(item => (
+                        <div
+                          key={item._id}
+                          className="flex items-center bg-gray-100 p-3 rounded-md w-full"
+                        >
+                          <img
+                            src={item.product_id?.image || 'https://dummyimage.com/150x150/cccccc/ffffff&text=No+Image'}
+                            className="w-20 h-20 rounded-md object-cover"
+                            alt={item.product_id?.productName || 'Product Image'}
+                          />
+                          <div className="ml-4">
+                            <h3 className="font-medium text-gray-900">{item.product_id?.productName || 'Loading...'}</h3>
+                            <p className="text-sm text-gray-700">₱{item.product_id?.price || 'Loading...'}</p>
+                            <p className="text-sm text-gray-700">Sold <span className="font-bold">{item.quantity} items</span></p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </ul>
           ) : (
             <p className="text-gray-500">

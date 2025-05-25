@@ -28,16 +28,18 @@ export default function Dashboard() {
     const [heatMapData, setHeatMapData] = useState([]);
     const [addresses, setAddresses] = useState([]);
     const [townData, setTownData] = useState([]);
+    //console.log(townData, "townData");
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(null);
     //console.log(selectedMonth, "selectedMonth");
     const [selectedMonthData, setSelectedMonthData] = useState(null);
     //console.log(selectedMonthData, "selectedMonthData");
-    const [showAllTowns, setShowAllTowns] = useState(false);
+    const [showAllTowns, setShowAllTowns] = useState(true); // Default to true to show buyer distribution
+    //console.log(showAllTowns, "showAllTowns");
     const [summaryType, setSummaryType] = useState("month"); // New state for summary type
 
     const chartData = showAllTowns ? townData : selectedMonthData;
-    console.log(chartData, "chartData");
+    //console.log(chartData, "chartData");
     const dataKey = showAllTowns ? "count" : "totalRevenue";
     const vendorId = localStorage.getItem("vendorId");
 
@@ -93,7 +95,7 @@ export default function Dashboard() {
             // For 'day', selectedLabel is a date string (e.g., '2025-05-22')
             // selectedMonthData should be an array of { town, totalRevenue, day }
             if (selectedMonthData.length > 0 && selectedMonthData[0].day) {
-                // Filter for the selected day
+                // Find the breakdown for the selected day
                 return selectedMonthData.filter(item => item.day === selectedLabel);
             }
             // If no 'day' property, just return selectedMonthData
@@ -105,11 +107,15 @@ export default function Dashboard() {
         }
         return [];
     }, [selectedLabel, summaryType, selectedMonthData]);
-    console.log(pieChartData, "pieChartData");
+    //console.log(pieChartData, "pieChartData");
     // --- Update Pie Chart on Line Chart Click ---
     const handleLineChartClick = (data) => {
         if (data && data.activeLabel) {
             setSelectedLabel(data.activeLabel);
+            // If summaryType is 'day', update selectedMonthData to the breakdown for that day
+            if (summaryType === "day" && Array.isArray(selectedMonthData) && selectedMonthData.length > 0 && selectedMonthData[0].day) {
+                // No need to update selectedMonthData, just update selectedLabel
+            }
         }
     };
 
@@ -450,74 +456,16 @@ export default function Dashboard() {
                         <Card className="w-1/2 shadow-md bg-white hover:shadow-lg transition-shadow duration-300">
                             <CardHeader>
                                 <CardTitle className="flex justify-between text-lg text-gray-700">
-                                    <div className="flex flex-col">
-                                        {showAllTowns
-                                            ? "Buyer Distribution for All Towns"
-                                            : selectedLabel
-                                                ? `Revenue Distribution for ${(() => {
-                                                    if (summaryType === "day") {
-                                                        const date = new Date(selectedLabel);
-                                                        if (!isNaN(date)) {
-                                                            return date.toLocaleString("default", { month: "long", day: "numeric" });
-                                                        }
-                                                        return selectedLabel;
-                                                    }
-                                                    if (summaryType === "week" && typeof selectedLabel === "string" && selectedLabel.startsWith("Week ")) {
-                                                        return selectedLabel.split(",")[0];
-                                                    }
-                                                    if (summaryType === "month" && typeof selectedLabel === "string") {
-                                                        return selectedLabel.split(",")[0];
-                                                    }
-                                                    return selectedLabel;
-                                                })()}`
-                                                : "Buyer Distribution by Town"}
-                                        <div className="space-y-2 mt-2">
-                                            {Array.isArray(chartData) && chartData.length > 0 ? (
-                                                showAllTowns ? (
-                                                    <div className="flex flex-col">
-                                                        <p>
-                                                            Total Customers: <strong>
-                                                                {chartData.reduce((sum, item) => sum + (item[dataKey] || 0), 0)}
-                                                            </strong>
-                                                        </p>
-                                                        <p>
-                                                            Top City/Town: <strong>
-                                                                {chartData.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])?.town} (
-                                                                {chartData.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])[dataKey]})
-                                                            </strong>
-                                                        </p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-col">
-                                                        <p>
-                                                            Total Revenue: <strong>₱
-                                                                {chartData.reduce((sum, item) => sum + (item[dataKey] || 0), 0).toLocaleString()}
-                                                            </strong>
-                                                        </p>
-                                                        <p>
-                                                            Top City/Town: <strong>
-                                                                {chartData.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])?.town} (
-                                                                ₱{chartData.reduce((max, item) => (item[dataKey] > max[dataKey] ? item : max), chartData[0])[dataKey].toLocaleString()})
-                                                            </strong>
-                                                        </p>
-                                                    </div>
-                                                )
-                                            ) : (
-                                                <p className="text-gray-500">
-                                                    {showAllTowns ? "No data available" : selectedMonth ? "No data for this month" : "Select a month to view details"}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-
+                                    Buyer Distribution for All Towns
+                                    {/*}
                                     <Button
                                         onClick={() => setShowAllTowns((prev) => !prev)}
                                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
                                     >
-                                        {showAllTowns ? "View Selected Month" : "See All Town"}
+                                        {showAllTowns ? "View Selected Month" : "See All Towns"}
                                     </Button>
+                                    */}
                                 </CardTitle>
-
                             </CardHeader>
                             <CardContent>
                                 <div className="w-full">
@@ -525,21 +473,21 @@ export default function Dashboard() {
                                         <div className="flex justify-center items-center h-72">
                                             <div className="w-40 h-40 rounded-full bg-gray-300 animate-pulse" />
                                         </div>
-                                    ) : pieChartData && pieChartData.length > 0 ? (
+                                    ) : townData && townData.length > 0 ? (
                                         <ResponsiveContainer width="100%" height={300}>
                                             <PieChart>
                                                 <Pie
-                                                    data={pieChartData}
-                                                    dataKey={showAllTowns ? "count" : "totalRevenue"}
+                                                    data={townData}
+                                                    dataKey="count"
                                                     nameKey="town"
                                                     cx="50%"
                                                     cy="50%"
                                                     outerRadius="90%"
                                                     onClick={handlePieClick}
                                                 >
-                                                    {pieChartData.map((entry, index) => (
+                                                    {townData.map((entry, index) => (
                                                         <Cell
-                                                            key={`cell-${index}`}
+                                                            key={`cell-alltowns-${index}`}
                                                             fill={colors[entry.town] || "#ccc"}
                                                         />
                                                     ))}
@@ -549,9 +497,7 @@ export default function Dashboard() {
                                             </PieChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <p className="text-center text-gray-500">
-                                            {showAllTowns ? "No data available" : selectedMonth ? "No data for this month" : "Select a month to view details"}
-                                        </p>
+                                        <p className="text-center text-gray-500">No data available</p>
                                     )}
                                 </div>
                             </CardContent>
@@ -614,7 +560,6 @@ export default function Dashboard() {
                                         </div>
                                     </DialogDescription>
                                 </DialogContent>
-
                             </Dialog>
                         )}
                     </>

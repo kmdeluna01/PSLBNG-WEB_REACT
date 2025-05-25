@@ -160,9 +160,9 @@ export default function Products() {
           >
             {/* Unavailable Overlay */}
             {(product.quantity === 0 || product.availability === false) && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black bg-opacity-50 z-0 flex items-center justify-center">
                 <span className="bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded">
-                  Unavailable
+                  {product.quantity === 0 ? 'Out of products' : 'Unavailable'}
                 </span>
               </div>
             )}
