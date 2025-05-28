@@ -30,9 +30,11 @@ const MerchantDetails = () => {
   const [showModal, setShowModal] = useState(false);  // State to control the modal visibility
   const [name, setName] = useState("");  // State to store shop name
   const [permit, setPermit] = useState("");
+  //console.log(permit);
   const [email, setEmail] = useState("");  // State to store email
   const [number, setNumber] = useState("");  // State to store phone number
   const [location, setLocation] = useState(null);  // State to store the location
+  //console.log(location);
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(false);  // Track if the user is using current location
   const [saving, setSaving] = useState(false);  // State to control saving status
   const [loading, setLoading] = useState(false);  // State to control loading status
@@ -123,12 +125,14 @@ const MerchantDetails = () => {
   const handleSave = async () => {
     setSaving(true);  // Set saving status to true
     const vendorId = localStorage.getItem("vendorId");
+    console.log("location:", location);
+    console.log("permit:", permit);
 
     // Check if all fields are filled out
     if (!name || !email || !number || !location) {
       return alert("Please fill in all fields and set a location.");
     }
-    if (!businessPermit) {
+    if (!permit) {
       alert("Please upload your Business Permit for verification.");
       setSaving(false);
       return;
@@ -138,8 +142,9 @@ const MerchantDetails = () => {
     formData.append("name", name);
     formData.append("email", email);
     formData.append("number", number);
-    formData.append("location", JSON.stringify(location));
-    formData.append("permit", businessPermit);
+    formData.append("latitude", location.latitude);
+    formData.append("longitude", location.longitude);
+    formData.append("permit", permit);
 
     try {
       // Send updated data to the API
@@ -222,19 +227,30 @@ const MerchantDetails = () => {
             type="file"
             accept="application/pdf,image/*"
             className="w-full px-4 py-2 border rounded-md"
-            onChange={e => setBusinessPermit(e.target.files[0])}
+            onChange={e => setPermit(e.target.files[0])}
           />
-          {businessPermit && typeof businessPermit !== 'string' && (
-            <img
-              src={URL.createObjectURL(businessPermit)}
-              alt="Preview"
-              className="w-40 h-40 object-cover rounded mx-auto"
-            />
+
+          {/* Preview newly selected image (if it's not a string) */}
+          {permit && typeof permit !== 'string' && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-600">Preview:</p>
+              {permit.type === 'application/pdf' ? (
+                <p className="text-blue-600">PDF Selected: {permit.name}</p>
+              ) : (
+                <img
+                  src={URL.createObjectURL(permit)}
+                  alt="Preview"
+                  className="w-40 h-40 object-cover rounded mx-auto"
+                />
+              )}
+            </div>
           )}
-          {/* Display uploaded permit if available in profile */}
-          {permit && typeof permit === 'string' && (
-            <div className="w-full">
-              {permit.match(/\.(pdf)$/i) ? (
+
+          {/* Show saved permit (from database/profile) */}
+          {!businessPermit && permit && typeof permit === 'string' && (
+            <div className="mt-4 w-full">
+              <p className="text-sm text-gray-600">Uploaded Permit:</p>
+              {permit.match(/\.pdf$/i) ? (
                 <a
                   href={permit}
                   target="_blank"
@@ -253,6 +269,7 @@ const MerchantDetails = () => {
             </div>
           )}
         </div>
+
 
         <div>
           <label className="block text-gray-700">Location</label>

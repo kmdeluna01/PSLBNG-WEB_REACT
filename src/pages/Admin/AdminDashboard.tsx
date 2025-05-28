@@ -14,6 +14,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
     //console.log("Users:", users);
     const [selectedVendor, setSelectedVendor] = useState(null);
+    console.log("Selected Vendor:", selectedVendor);
     const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [verifying, setVerifying] = useState(false);
@@ -79,6 +80,7 @@ export default function AdminDashboard() {
     const filteredVendors = vendors.filter((vendor) => {
         if (selectedStatus === "Verified") return vendor.verified;
         if (selectedStatus === "Not Verified") return !vendor.verified;
+        if (selectedStatus === "Requests") return vendor.permit && !vendor.verified;
         return true; // All
     });
 
@@ -139,14 +141,13 @@ export default function AdminDashboard() {
                                                 <p><strong>Status:</strong> {selectedOrder.status}</p>
                                                 <p><strong>Payment Mode:</strong> {selectedOrder.paymentMode}</p>
                                                 <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                                                <p><strong>Customer:</strong> {selectedOrder.userId && selectedOrder.userId.nickname ? selectedOrder.userId.nickname : (selectedOrder.userId && selectedOrder.userId.email ? selectedOrder.userId.email : String(selectedOrder.userId))}</p>
-                                                <p><strong>Merchant:</strong> {selectedOrder.userId && selectedOrder.userId.email ? selectedOrder.userId.email : String(selectedOrder.userId)}</p>
+                                                <p><strong>Customer:</strong> {selectedOrder.userId?._id || "Unknown Customer"}</p>
+                                                <p><strong>Merchant:</strong> {selectedOrder.items[0].product_id?.vendorID || selectedOrder.items[0].vendorID || "Unknown Merchant"}</p>
                                                 <p><strong>Items:</strong></p>
                                                 <ul className="ml-4 mt-2 text-sm text-gray-700">
                                                     {selectedOrder.items.map((item, idx) => (
                                                         <li key={idx} className="flex justify-between">
-                                                            <span>{item.productName || item.product_id?.productName || 'Product'}</span>
-                                                            <span>Qty: {item.quantity}</span>
+                                                            <span>{item.quantity} {item.productName || item.product_id?.productName || 'Product'}</span>
                                                             <span>₱{item.price || item.product_id?.price || '-'}</span>
                                                         </li>
                                                     ))}
@@ -178,6 +179,7 @@ export default function AdminDashboard() {
                                 <option value="All">All</option>
                                 <option value="Verified">Verified</option>
                                 <option value="Not Verified">Not Verified</option>
+                                <option value="Requests">Requests</option>
                             </select>
                         </CardTitle>
                     </CardHeader>

@@ -25,6 +25,7 @@ export default function Dashboard() {
     const [canceledOrders, setCanceledOrders] = useState([]);
     const [activeTab, setActiveTab] = useState("delivered");
     const [location, setLocation] = useState(null);
+    //console.log(location);
     const [heatMapData, setHeatMapData] = useState([]);
     const [addresses, setAddresses] = useState([]);
     const [townData, setTownData] = useState([]);
@@ -53,22 +54,22 @@ export default function Dashboard() {
         setSelectedData(data);
         setIsModalOpen(true);
     };
-
+    
     // Initial data fetching
     useEffect(() => {
         fetchSalesData();
         fetchDeliveredOrders();
         getUserDetails();
-    }, [vendorId]);
+    }, [vendorId, summaryType]);
 
-    // Fetch geolocation data when delivered orders are available
+    // Fetch geolocation data when deliveredOrders change
     useEffect(() => {
         if (deliveredOrders.length > 0) {
             fetchGeolocationData();
         }
     }, [deliveredOrders]);
 
-    // Update month data when selectedMonth changes
+    // Update selectedMonthData when selectedMonth changes
     useEffect(() => {
         if (selectedMonth) {
             const monthData = getMonthDistribution(deliveredOrders);
@@ -79,10 +80,14 @@ export default function Dashboard() {
         }
     }, [selectedMonth, deliveredOrders]);
 
-    // Update sales data when summaryType changes
+    // Set default selectedLabel on monthlyRevenue or summaryType change
     useEffect(() => {
-        fetchSalesData();
-    }, [summaryType, vendorId]);
+        if (monthlyRevenue.length > 0) {
+            setSelectedLabel(monthlyRevenue[0].month);
+        } else {
+            setSelectedLabel(null);
+        }
+    }, [monthlyRevenue, summaryType]);
 
     // --- Pie Chart Data Logic ---
     // For summaryType 'month', clicking a line chart month shows pie by town for that month
@@ -120,13 +125,7 @@ export default function Dashboard() {
     };
 
     // --- Set default selectedLabel on data load or summaryType change ---
-    useEffect(() => {
-        if (monthlyRevenue.length > 0) {
-            setSelectedLabel(monthlyRevenue[0].month);
-        } else {
-            setSelectedLabel(null);
-        }
-    }, [monthlyRevenue, summaryType]);
+    
 
     // Generates a random hex color
     const getRandomColor = () => {
@@ -637,13 +636,13 @@ export default function Dashboard() {
                                 </table>
                             ) : (
                                 <div className="h-96 relative">
-                                    <MapContainer center={[location.latitude, location.longitude]} zoom={13} style={{ height: "100%", width: "100%" }}>
-                                        <TileLayer
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        />
-                                        <HeatmapLayer data={heatMapData} />
-                                    </MapContainer>
+                                        <MapContainer center={[location.latitude, location.longitude]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                                            <TileLayer
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            />
+                                            <HeatmapLayer data={heatMapData} />
+                                        </MapContainer>
                                 </div>
                             )}
                         </div>
