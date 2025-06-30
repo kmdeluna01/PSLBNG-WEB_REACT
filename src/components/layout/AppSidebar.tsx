@@ -110,8 +110,8 @@ export function AppSidebar({ closeSidebar }: { closeSidebar?: () => void }) {
                     >
                       <button
                         className={`w-full flex items-center px-4 py-2 rounded-md transition-colors ${isActive
-                            ? "bg-green-100 text-green-700 font-bold"
-                            : "text-gray-700 hover:bg-gray-200"
+                          ? "bg-green-100 text-green-700 font-bold"
+                          : "text-gray-700 hover:bg-gray-200"
                           }`}
                       >
                         <div className="flex items-center">
