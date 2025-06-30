@@ -137,6 +137,7 @@ const SecuritySettings = () => {
                 <h2 className="text-2xl font-bold text-gray-800">Security Settings</h2>
             </div>
             <div className="m-3 space-y-4">
+                {/*}
                 <button
                     className="flex justify-between items-center w-full bg-white p-4 rounded-lg shadow hover:bg-green-50"
                     onClick={() => {
@@ -146,6 +147,7 @@ const SecuritySettings = () => {
                 >
                     <span className="text-lg font-semibold text-green-700">Change POS Account</span>
                 </button>
+                */}
                 <button
                     className="flex justify-between items-center w-full bg-white p-4 rounded-lg shadow hover:bg-green-50"
                     onClick={() => {
