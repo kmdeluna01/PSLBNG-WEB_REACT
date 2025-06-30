@@ -34,7 +34,7 @@ import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "api";
 
 // Sidebar component definition
-export function AppSidebar() {
+export function AppSidebar({ closeSidebar }: { closeSidebar?: () => void }) {
   const navigate = useNavigate(); // Hook to programmatically navigate to routes
   const location = useLocation(); // Hook to get the current route path
 
@@ -86,40 +86,39 @@ export function AppSidebar() {
 
   // Render the sidebar
   return (
-    <Sidebar className="sticky top-0 h-screen"> {/* Sidebar sticks to top and takes full height */}
-      <SidebarContent className="flex flex-col h-full overflow-y-auto"> {/* Scrollable content */}
-        
-        {/* Logo section at the top */}
-        <div className="p-6">
-          <img src={logo} alt="PSLBNG Logo" className="h-auto" />
+    <Sidebar className="flex flex-col w-64 h-screen bg-white shadow-lg lg:sticky lg:top-0">
+      <SidebarContent className="flex-1 flex flex-col items-start justify-start overflow-y-auto px-2 py-6">
+        <div className="flex justify-center items-center">
+          <img src={logo} alt="PSLBNG Logo" className="px-3 h-20 w-auto" />
         </div>
 
-        {/* Sidebar menu group */}
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel> {/* Group label */}
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Loop through menu items to display them dynamically */}
               {menuItems.map((item) => {
-                const isActive = location.pathname === item.path; // Check if this item is currently active
+                const isActive = location.pathname === item.path;
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild onClick={() => navigate(item.path)}>
+                    <SidebarMenuButton
+                      asChild
+                      onClick={() => {
+                        navigate(item.path);
+                        closeSidebar?.();
+                      }}
+                    >
                       <button
-                        className={`w-full flex items-center px-4 py-2 rounded-md transition-colors ${
-                          isActive
-                            ? "bg-green-100 text-green-700 font-bold" // Style for active page
-                            : "text-gray-700 hover:bg-gray-200"     // Style for inactive
-                        }`}
+                        className={`w-full flex items-center px-4 py-2 rounded-md transition-colors ${isActive
+                            ? "bg-green-100 text-green-700 font-bold"
+                            : "text-gray-700 hover:bg-gray-200"
+                          }`}
                       >
-                        {/* Icon and title of the menu item */}
                         <div className="flex items-center">
                           <item.icon className="mr-3 h-4 w-4" />
                           <span>{item.title}</span>
                         </div>
 
-                        {/* If there's an alert and incoming orders, show a red badge */}
                         {item.hasAlert && incomingOrders > 0 && (
                           <span className="ml-2 flex items-center justify-center bg-red-600 text-white text-xs font-bold w-5 h-5 rounded-full">
                             {incomingOrders}
@@ -136,6 +135,7 @@ export function AppSidebar() {
       </SidebarContent>
     </Sidebar>
   );
+
 }
 
 // Export the component to be used in other parts of the app

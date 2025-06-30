@@ -47,6 +47,20 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
     getUserDetails();
   }, []);
 
+  useEffect(() => {
+  if (sidebarOpen) {
+    document.body.classList.add("overflow-hidden");
+  } else {
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  // Cleanup on unmount
+  return () => {
+    document.body.classList.remove("overflow-hidden");
+  };
+}, [sidebarOpen]);
+
+
   // Fetch merchant profile and update state
   const getUserDetails = async () => {
     const vendorId = localStorage.getItem("vendorId");
@@ -94,7 +108,7 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-vendor-100">
+      <div className="min-h-screen flex flex-col lg:flex-row w-full bg-vendor-100">
         {/* Mobile Menu Button - shown on small screens */}
         <div className="lg:hidden fixed top-4 left-4 z-50">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -112,17 +126,17 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Sidebar itself - slides in/out on mobile, always visible on desktop */}
         <div
-          className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform ${
+          className={`w-64 fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } transition-transform lg:relative lg:translate-x-0 lg:block`}
+          } transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:block`}
         >
-          <AppSidebar />
+          <AppSidebar closeSidebar={() => setSidebarOpen(false)} />
         </div>
 
         {/* Main content area (everything next to the sidebar) */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Top Navigation Bar */}
-          <div className="bg-white shadow-md px-4 flex justify-end items-center">
+          <div className="bg-white shadow-md px-4 flex justify-end sticky top-0 z-30 items-center">
             <div className="flex items-center gap-4">
               {/* Show warning if merchant is not verified, or verified label if verified */}
               {!isVerified ? (
@@ -215,7 +229,7 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
           </div>
 
           {/* Main content (children passed into the layout) */}
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-4 min-h-[calc(100vh-4rem)]">{children}</main>
         </div>
       </div>
     </SidebarProvider>
