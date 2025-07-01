@@ -26,6 +26,8 @@ const UploadProduct = ({ open, onClose, onProductUploaded }) => {
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [description, setDescription] = useState("");
+  const [priceError, setPriceError] = useState("");
+  const [quantityError, setQuantityError] = useState("");
   const [photo, setPhoto] = useState(null);         // Image file
   const [vendorId, setVendorId] = useState(null);   // Vendor ID from localStorage
   const [isUploading, setIsUploading] = useState(false); // Upload loading state
@@ -43,6 +45,17 @@ const UploadProduct = ({ open, onClose, onProductUploaded }) => {
       setPhoto(file);
     }
   };
+
+  const handleNumericPaste = (e, setError) => {
+    const pastedText = e.clipboardData.getData("text");
+    if (!/^\d*\.?\d*$/.test(pastedText)) {
+      e.preventDefault();
+      setError("Please enter a valid numeric value");
+    } else {
+      setError("");
+    }
+  };
+
 
   // Upload product to the backend server
   const handleUploadProduct = async () => {
@@ -125,6 +138,13 @@ const UploadProduct = ({ open, onClose, onProductUploaded }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Sell Your Pasalubong</DialogTitle>
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold"
+        aria-label="Close"
+      >
+        &times;
+      </button>
       <DialogContent>
         <div className="space-y-4">
           {/* Image upload input */}
@@ -150,19 +170,27 @@ const UploadProduct = ({ open, onClose, onProductUploaded }) => {
 
           {/* Price input */}
           <input
-            type="number"
+            type="number" min="0" step="0.01"
             placeholder="Price"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
+            onKeyDown={(e) => {
+              if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+            }}
+            onPaste={(e) => handleNumericPaste(e, setPriceError)}
             className="w-full px-4 py-2 border rounded-md"
           />
 
           {/* Quantity input */}
           <input
-            type="number"
+            type="number" min="0" step="1"
             placeholder="Available Stock"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
+            onKeyDown={(e) => {
+              if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+            }}
+            onPaste={(e) => handleNumericPaste(e, setPriceError)}
             className="w-full px-4 py-2 border rounded-md"
           />
 
@@ -175,13 +203,22 @@ const UploadProduct = ({ open, onClose, onProductUploaded }) => {
           ></textarea>
 
           {/* Upload button */}
-          <button
-            onClick={handleUploadProduct}
-            disabled={isUploading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-          >
-            {isUploading ? "Uploading..." : "Upload"}
-          </button>
+          <div className="flex justify-between gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full bg-red-400 hover:bg-red-500 text-white px-4 py-2 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUploadProduct}
+              disabled={isUploading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+            >
+              {isUploading ? "Uploading..." : "Upload"}
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

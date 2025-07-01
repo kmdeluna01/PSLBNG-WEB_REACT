@@ -19,6 +19,9 @@ const EditProduct = () => {
   const { product_id } = useParams();
   const navigate = useNavigate(); // For navigation
 
+
+  const [priceError, setPriceError] = useState("");
+
   // State variables to hold product data
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState('');
@@ -66,6 +69,16 @@ const EditProduct = () => {
     const file = event.target.files[0];
     if (file) {
       setPhoto(file);
+    }
+  };
+
+  const handleNumericPaste = (e, setError) => {
+    const pastedText = e.clipboardData.getData("text");
+    if (!/^\d*\.?\d*$/.test(pastedText)) {
+      e.preventDefault();
+      setError("Please enter a valid numeric value");
+    } else {
+      setError("");
     }
   };
 
@@ -183,6 +196,10 @@ const EditProduct = () => {
               id="price"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
+              onKeyDown={(e) => {
+                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+              }}
+              onPaste={(e) => handleNumericPaste(e, setPriceError)}
               type="number"
             />
 
@@ -191,6 +208,10 @@ const EditProduct = () => {
               id="quantity"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
+              onKeyDown={(e) => {
+                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+              }}
+              onPaste={(e) => handleNumericPaste(e, setPriceError)}
               type="number"
             />
 
