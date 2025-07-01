@@ -34,10 +34,12 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
   interface MerchantDetails {
     notifications: { id: string; message: string; date: Date; read: boolean }[];
     verified?: boolean;
+    permit?: string;
   }
 
   // State to store merchant data including notifications
   const [merchantDetails, setMerchantDetails] = useState<MerchantDetails>({ notifications: [] });
+  //console.log("Merchant Details:", merchantDetails.permit);
 
   // Count unread notifications
   const unreadCount = merchantDetails.notifications.filter(notification => !notification.read).length;
@@ -48,17 +50,17 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
   }, []);
 
   useEffect(() => {
-  if (sidebarOpen) {
-    document.body.classList.add("overflow-hidden");
-  } else {
-    document.body.classList.remove("overflow-hidden");
-  }
+    if (sidebarOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
 
-  // Cleanup on unmount
-  return () => {
-    document.body.classList.remove("overflow-hidden");
-  };
-}, [sidebarOpen]);
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [sidebarOpen]);
 
 
   // Fetch merchant profile and update state
@@ -118,17 +120,15 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Overlay for mobile sidebar - darkens background when sidebar is open */}
         <div
-          className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity ${
-            sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          } lg:hidden`}
+          className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            } lg:hidden`}
           onClick={() => setSidebarOpen(false)}
         ></div>
 
         {/* Sidebar itself - slides in/out on mobile, always visible on desktop */}
         <div
-          className={`w-64 fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:block`}
+          className={`w-64 fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            } transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:block`}
         >
           <AppSidebar closeSidebar={() => setSidebarOpen(false)} />
         </div>
@@ -144,13 +144,19 @@ export const ProductsLayout = ({ children }: DashboardLayoutProps) => {
                   <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-xs font-semibold mr-2">
                     Account not verified
                   </span>
-                  <Button
-                    size="sm"
-                    className="bg-yellow-500 text-white hover:bg-yellow-600"
-                    onClick={() => navigate("/merchant/details")}
-                  >
-                    Get Verified
-                  </Button>
+                  {merchantDetails?.permit ? (
+                    <span className="bg-yellow-200 text-yellow-900 px-3 py-1 rounded text-xs font-semibold">
+                      Waiting for Approval
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="bg-yellow-500 text-white hover:bg-yellow-600"
+                      onClick={() => navigate("/merchant/details")}
+                    >
+                      Get Verified
+                    </Button>
+                  )}
                 </>
               ) : (
                 <span className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-semibold mr-2">
