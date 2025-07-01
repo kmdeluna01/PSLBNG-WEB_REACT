@@ -14,6 +14,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"; // High-res m
 import L from "leaflet"; // Leaflet library
 import markerIcon from "leaflet/dist/images/marker-icon.png"; // Regular marker icon
 import markerShadow from "leaflet/dist/images/marker-shadow.png"; // Marker shadow for the icon
+const LOCATIONIQ_API_KEY = import.meta.env.VITE_LOCATIONIQ_API_KEY;
 
 // Custom icon settings for map markers
 const customIcon = new L.Icon({
@@ -72,6 +73,28 @@ const RegisterPage = () => {
       setEmailError(""); // Clear error if valid email
     }
   };
+
+  const handleAddressInput = async (e) => {
+    const address = e.target.value;
+    try {
+      const response = await fetch(
+        `https://us1.locationiq.com/v1/search.php?key=${LOCATIONIQ_API_KEY}&q=${encodeURIComponent(address)}&format=json`
+      );
+
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const { lat, lon } = data[0];
+        setLocation({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
+        console.log("Coordinates:", lat, lon);
+      } else {
+        console.warn("No results from LocationIQ.");
+      }
+    } catch (err) {
+      console.error("Geocoding error (LocationIQ):", err);
+    }
+  };
+
 
   // Handle phone number input validation
   const handlePhoneValidation = (e) => {
@@ -134,7 +157,7 @@ const RegisterPage = () => {
     try {
       const password = formData.get("registerPassword"); // Get the password
       const verifyPassword = formData.get("verifyPassword"); // Get the confirmed password
-      
+
       // Check if passwords match
       if (password !== verifyPassword) {
         throw new Error("Passwords do not match"); // Show error if passwords don't match
@@ -174,66 +197,76 @@ const RegisterPage = () => {
             </div>
             <div>
               <Label htmlFor="registerEmail">Email</Label>
-              <Input 
-                id="registerEmail" 
-                name="registerEmail" 
-                type="email" 
-                required 
-                className="mt-2" 
-                onInput={handleEmailValidation} 
+              <Input
+                id="registerEmail"
+                name="registerEmail"
+                type="email"
+                required
+                className="mt-2"
+                onInput={handleEmailValidation}
               />
               {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
             </div>
           </div>
           <div>
             <Label htmlFor="phoneNumber">Phone Number</Label>
-            <Input 
-              id="phoneNumber" 
-              name="phoneNumber" 
-              required 
-              maxLength={11} 
-              placeholder="09XX XXX XXXX" 
-              className="mt-2" 
-              onInput={handlePhoneValidation} 
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              required
+              maxLength={11}
+              placeholder="09XX XXX XXXX"
+              className="mt-2"
+              onInput={handlePhoneValidation}
             />
             {phoneError && <p className="text-red-500 text-sm">{phoneError}</p>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label htmlFor="registerPassword">Password</Label>
-            <Input 
-              id="registerPassword" 
-              name="registerPassword" 
-              type="password" 
-              required 
-              className="mt-2" 
-              onInput={handlePasswordChange} 
-            />
+            <div>
+              <Label htmlFor="registerPassword">Password</Label>
+              <Input
+                id="registerPassword"
+                name="registerPassword"
+                type="password"
+                required
+                className="mt-2"
+                onInput={handlePasswordChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="verifyPassword">Repeat Password</Label>
+              <Input
+                id="verifyPassword"
+                name="verifyPassword"
+                type="password"
+                required
+                className="mt-2"
+                onInput={handleVerifyPasswordChange}
+              />
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+            </div>
           </div>
-          <div>
-            <Label htmlFor="verifyPassword">Repeat Password</Label>
-            <Input 
-              id="verifyPassword" 
-              name="verifyPassword" 
-              type="password" 
-              required 
-              className="mt-2" 
-              onInput={handleVerifyPasswordChange} 
-            />
-            {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
-          </div>
-        </div>
 
           <div>
+            <div>
+              <Label htmlFor="address">Address (Optional)</Label>
+              <Input
+                id="address"
+                name="address"
+                placeholder="e.g. 123 Rizal St, Pagbilao, Quezon"
+                className="mt-2"
+                onInput={handleAddressInput} // optional handler if you want to geocode later
+              />
+            </div>
             <Label>Location</Label>
             {!showModal && (
               <div className="h-[300px] rounded-lg overflow-hidden border">
                 {location ? (
-                  <MapContainer 
-                    key={`${location?.latitude}-${location?.longitude}`} 
-                    center={[location.latitude, location.longitude]} 
-                    zoom={16} 
+                  <MapContainer
+                    key={`${location?.latitude}-${location?.longitude}`}
+                    center={[location.latitude, location.longitude]}
+                    zoom={16}
                     className="h-full w-full"
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -249,28 +282,26 @@ const RegisterPage = () => {
             )}
             <div className="grid grid-cols-2 gap-4 mt-2">
               <Button
-                  type="button"
-                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
-                      activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                type="button"
+                className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${activeButton === "current" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
                   }`}
-                  onClick={handleCurrentLocation}
-                  disabled={activeButton === "current"}
+                onClick={handleCurrentLocation}
+                disabled={activeButton === "current"}
               >
-                  Use Current Location
+                Use Current Location
               </Button>
 
               <Button
-                  type="button"
-                  className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${
-                      activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
+                type="button"
+                className={`w-full py-2 px-4 rounded-xl font-semibold text-white ${activeButton === "pin" ? "bg-green-800 cursor-not-allowed" : "bg-green-700 hover:bg-green-600"
                   }`}
-                  onClick={handlePinLocation}
-                  disabled={activeButton === "pin"}
+                onClick={handlePinLocation}
+                disabled={activeButton === "pin"}
               >
-                  Pin a Location
+                Pin a Location
               </Button>
-          </div>
-          
+            </div>
+
           </div>
           <Button type="submit" className="w-full bg-green-700 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -285,10 +316,10 @@ const RegisterPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
               <h2 className="text-xl font-bold mb-4">Pin Your Location</h2>
               <div className="h-[400px]">
-                <MapContainer 
-                key={`${location?.latitude}-${location?.longitude}`} 
-                center={[location.latitude, location.longitude]} 
-                zoom={16} className="h-full">
+                <MapContainer
+                  key={`${location?.latitude}-${location?.longitude}`}
+                  center={[location.latitude, location.longitude]}
+                  zoom={16} className="h-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   {location && <Marker icon={customIcon} position={[location.latitude, location.longitude]} />}
                   <MapEvents />
