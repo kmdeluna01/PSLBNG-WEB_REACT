@@ -226,9 +226,19 @@ const MerchantDetails = () => {
           <input
             type="file"
             accept="application/pdf,image/*"
-            className="w-full px-4 py-2 border rounded-md"
-            onChange={e => setPermit(e.target.files[0])}
+            className={`w-full px-4 py-2 border rounded-md ${!permit ? "border-red-500 bg-red-50" : ""
+              }`}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file && file.size > 5 * 1024 * 1024) {
+                alert("File size exceeds 5MB limit");
+                e.target.value = ""; // Optional: reset input
+                return;
+              }
+              setPermit(file);
+            }}
           />
+
 
           {/* Preview newly selected image (if it's not a string) */}
           {permit && typeof permit !== 'string' && (
